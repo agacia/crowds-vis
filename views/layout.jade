@@ -1,7 +1,32 @@
 doctype 5
 html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    block content
+	head
+		title= title
+		link(rel='stylesheet', href='/css/style.css')
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+		link(rel='stylesheet', href='/css/crowds.css')
+		<meta name="viewport" content="width=800, user-scalable=0">
+		<script src="js/d3.js" charset="utf-8"></script>
+		<script src="js/fisheye.js"></script>
+		<script src="js/jquery.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+		<script src="js/crowds.js"></script>
+
+	body
+		#container
+			#navbar
+				#controls
+					p size by: 
+						select(class="sort-by")
+							option(value="com_size") Community size 
+							option(value="degree") Degree 
+							option(value="com_score") Community score
+						
+						color by: 
+						select(class="color-by")
+							option(value="com_id") Community id 
+							option(value="cc_id") Connected component size 
+					
+					p Time:
+						span(class="slider")
+		block content

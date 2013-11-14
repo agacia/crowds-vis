@@ -1,0 +1,86 @@
+ body{ margin: 0; font-family: helvetica; }
+      button, select { outline: none;}
+      
+      /* vis */
+      .vis{
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        z-index: -10;
+      }
+      .node { fill: black; }
+      circle { stroke: none; }
+      .node.active circle {
+        stroke-width: 1;
+        stroke: white;
+      }
+      .node.highlighted circle { 
+        stroke: yellow;
+        stroke-width: 10;
+        stroke-opacity: 0.5;
+      }
+      .tooltip{ display: none; }
+      .tooltip .bg{ opacity: 0.7; }
+      .tooltip text{
+        fill: white;
+      }
+      active.tooltip{
+        display: inherit;
+      }
+      .node text{
+        text-anchor: middle;
+        fill: black;
+      }
+
+      /* container */
+      #container {
+        width: 600px;
+        margin: auto;
+      }
+      #vis {
+        margin: auto;
+      }
+      #controls{ 
+        float: left;
+        font-size: 14px;
+      }
+      #title h1{
+        text-align: left;
+        margin: 10px;
+        float: left;
+      }
+      select{ font-size: 20px; }
+      .slider {
+        display: inline-block;
+        width: 100%;
+      }
+      
+      @media (max-width: 900px) {
+        h1, #controls{ 
+          float: left;
+          margin-left: 20px;
+        }
+        .share-left{
+          left: inherit;
+          right: 20px;
+          top: 60px;
+        }
+      }
+      @media(max-width: 400px){
+        .share-left, .share-right, .fb-share-right{
+          display: none;
+        }
+        h1{
+          display: none;
+        }
+        #controls{
+          font-size: 10px;
+          position: absolute;
+          top: inherit;
+          bottom: 5px;
+        }
+        #controls select{ width: 100px;}
+        #source{
+          display: none;
+        }
+      }
