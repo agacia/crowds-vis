@@ -69,6 +69,7 @@ window.onload = function() {
       if ( window.self !== window.top ){
         // we're in an iframe! oh no! hide the twitter follow button
       }
+      vis.call(createTooltip)
       d3.tsv('data/MobileLeung/communities.tsv', format, function(err, rows){
         if(err) throw err
         vehicles = rows
@@ -101,7 +102,6 @@ window.onload = function() {
           // .call(fisheyeEffect)
           // .call(tooltipEffect);
         node.transition().duration(1000).call(updatePos) 
-        vis.call(createTooltip)
       }
       function updateXScale(metric) {
         // x range 15423.98 - 48127.1
