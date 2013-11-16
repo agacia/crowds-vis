@@ -2,42 +2,39 @@ window.onload = function() {
   var width = window.innerWidth, height = window.innerHeight
         , vis = d3.select('body #container').append('svg').attr('class', 'vis')
           .style({ width: width + 'px', height: height + 'px' })
-        , node, max, margin = 20, max_area = 500, tooltip
-        , margin_top = (width > 450) ? 100 : 20
-        , margin_bottom = 50, steps_x = 100, steps_y = 28
+        , node, max, margin = 0, max_area = 800, tooltip
+        , margin_top = (width > 450) ? 10 : 5
+        , margin_bottom = 0, steps_x = 100, steps_y = 28
         , calcBestArea = function(){
-          // var r1 = (width / steps_x) / 1.4
-          //   , r2 = (height / steps_y) / 1.4
-          //   , r = r1 < r2 ? r1 : r2
-          // return Math.PI * r * r
           var r1 = (width ) 
             , r2 = (height)
-            , r = r1 < r2 ? r1 : r2
-            return r*1.4
+            , r = r1 > r2 ? r2 : r1
+            return r
         }
         , max_area = calcBestArea()
         , areaScale = d3.scale.linear().range([0, max_area])
-        , xScale = d3.scale.linear().range([margin, margin + max_area])
-        , yScale = d3.scale.linear().range([margin_top,margin_top + max_area])
+        , xScale = d3.scale.linear().range([margin, max_area - margin])
+        , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom])
         , maxY = 0
         , areaToRadius = function(area, scale){ return Math.sqrt( scale * area / Math.PI) }
         , fisheye = null
-        , fisheye = d3.fisheye.circular().radius(40).distortion(2)
+        , fisheye = d3.fisheye.circular().radius(60).distortion(3)
         , color = d3.scale.category20()
-        , colorMetric = $('.color-by').val()
+        , colorMetric = 'com_id'
         , sortMetric = $('.sort-by').val()
         , id = 0, order = 0
         , radius = function(d){ 
           var metric = sortMetric
           var scale = 1
-          if (metric == "com_score") {
-            scale = 0.5;
+          if (metric == "cos_score") {
+            scale = 0.4;
+            if (d[metric] < 0) {
+               return areaToRadius(0.1, scale)
+            }
           }
           return areaToRadius(areaScale(d[metric]), scale) 
         }
-        , x = d3.scale.linear().domain([0, steps_x]).range([margin, width - margin])
-        , y = d3.scale.linear().domain([0, steps_y]).range([margin_top, height - margin_bottom])
-        , dataKey = function(d){ return d.date }
+        , dataKey = function(d){ return d.node_id }
         , sortBy = function(by){ return function(a, b){ 
             if(a[by] === b[by]) return 0; else if(a[by] > b[by]) return -1;
             return 1;
@@ -45,123 +42,187 @@ window.onload = function() {
         , projection = d3.geo.albers()
         , money = d3.format('$,04d')   
         , format = function(d){ // when read cvs
-            // step  node_id x y degree  neighbors cc_id cc_size com_id  com_score com_size
-            var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'com_score', 'com_size'];
+            // step  id x y degree  neighbors cc_id cc_size com_id  cos_score com_size
+            var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
             d.id = id++;
             d.order = order++;
             return d;
         }
+        , formatGroup = function(d){ // when read cvs
+            // step id  x y degree  com_id  cos_score com_size  cc_size metadata  color
+            var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
+            numKeys.forEach(function(key){ d[key] = Number(d[key]) })
+            d.order = order++;
+            return d;
+        }
         , topNode = null
-        , firstStep = 0, lastStep = 10, step = 0
+        , firstStep = 0, lastStep = 700, step = 0, stepSize = 10
+        , filename ='groups_'
+        // , filename = 'communities.tsv'
+        , rootUrl = 'data/'
+        // , algorithm = 'MobileLeung'
+        , algorithm = 'MobileLeungSDSD'
         , slider = $( ".slider" ).slider({
             min: firstStep,
             max: lastStep,
+            step: stepSize,
             value: firstStep,
             slide: function( event, ui ) { 
               step = ui.value; 
-              var stepVehicles = $.grep(vehicles, function(el, i) { return el.step === step });
-              // console.log("step ", step, " vehicles: ", stepVehicles.length, stepVehicles);
-              gotVehicles(stepVehicles)
+              onStepUpdated()
             }
           })
+        , dateLabel = $("<div/>")
+                    .css({ position : 'absolute' , top : 0, left : 0 })
+                    .text(step)
+        , vehicles = {}
+        , dataLoaded = 0
+        , timerDelay = 300
+
+      $(".slider").slider()
+        .find(".ui-slider-handle")
+        .append(dateLabel)
 
       if ( window.self !== window.top ){
         // we're in an iframe! oh no! hide the twitter follow button
       }
-      vis.call(createTooltip)
-      d3.tsv('data/MobileLeung/communities.tsv', format, function(err, rows){
-        if(err) throw err
-        vehicles = rows
-        // console.log("loaded data ", vehicles);
-        updateXScale("x");
-        updateYScale("y");
 
-        // get only for a single step at once
-        var stepVehicles = $.grep(vehicles, function(el, i) { return el.step === step });
-        // console.log("step data ", stepVehicles);
-        gotVehicles(stepVehicles)
-        fisheyeEffect(vis)
-      })
-      function gotVehicles(vehicles){
-        // updateAreaScale(sortMetric)        
-        var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit().remove();
+      loadFiles(rootUrl, algorithm, filename);
+      // loadFile(rootUrl + algorithm + "/" + filename);
+      
+      function onStepUpdated() {
+        showVehicles(vehicles[step])
+        dateLabel.text(step)
+      }
+
+      function loadFiles(rootUrl, algorithm, baseFilename){
+        for (var i = firstStep; i < lastStep; i += stepSize) {
+          var reqUrl = rootUrl + algorithm + "/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
+          // 'data/MobileLeung/communities.tsv'
+          d3.tsv(reqUrl, formatGroup, function(err, rows){
+            if(err) throw err
+            if (rows.length > 0) {
+              var stepId = rows[0].step
+              vehicles[stepId] = rows
+            }
+            gotVehicles(stepId);
+          })
+        }
+      }
+      function loadFile(url) {
+        d3.tsv(url, format, function(err, rows){
+          if(err) throw err
+          // get only for a single step at once
+          for (var i = firstStep; i < lastStep; i += stepSize) {
+            vehicles[step] = $.grep(vehicles, function(el, i) { return el.step === step });
+          }
+          updateXScale("x");
+          updateYScale("y");
+          step = firstStep;
+          showVehicles(vehicles[step])
+        })
+      }
+      function gotVehicles(){
+        dataLoaded += 1
+        if (dataLoaded == lastStep/stepSize) {
+          updateXScale("x");
+          updateYScale("y");
+          step = firstStep;
+          showVehicles(vehicles[step])
+          // fisheyeEffect(vis)
+        }
+      }
+      function showVehicles(vehicles) { 
+        console.log("showing step ", step, vehicles)  
+        updateAreaScale(sortMetric)
+        var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
+        console.log("step", step, " exit nodes ", exitNodes)
+        exitNodes
+          // .transition().duration(900).style("opacity",0)
+          .remove();
         node = vis.selectAll('.node').data(vehicles)
-          .enter().append('g')
-            .attr('class', 'node')     
+          .enter()
+            .append('g')
+            .attr('class', 'node')  
+        // console.log("step", step, " nodes ", node)
         node.on('click', function(){
           var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
             , sel = d3.select(this)
-          if(sel.node() !== node) sel.classed('highlighted', !d3.select(this).classed('highlighted'))
+          if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
         })
         node.append('circle')
-          .attr('x',0)
-          .attr('y',0)
           .call(updateColor)
-          .call(updatePos) 
-          // .call(fisheyeEffect)
+        node.call(updatePos) 
           // .call(tooltipEffect);
-        node.transition().duration(1000).call(updatePos) 
+        fisheyeEffect(vis)
+        vis.call(createTooltip)   
       }
       function updateXScale(metric) {
-        // x range 15423.98 - 48127.1
-        var max = d3.max(vehicles, function(d){ 
-          return d[metric] })
-        xScale.domain([0, max])
+        maxX = 0;
+        for (var i = firstStep; i < lastStep; i += stepSize)  {
+           maxXStep = d3.max(vehicles[i], function(d){ return d[metric] })
+           if (maxXStep > maxX) {
+            maxX = maxXStep;
+           }
+        }
+        xScale.domain([0, maxX])
       }
       function updateYScale(metric) {
         // y range 9717.82 - 37499.01 
-        maxY = d3.max(vehicles, function(d){ 
-          return d[metric] })
+        maxY = 0;
+        for (var i = firstStep; i < lastStep; i += stepSize)  {
+           maxYStep = d3.max(vehicles[i], function(d){ return d[metric] })
+           if (maxYStep > maxY) {
+            maxY = maxYStep;
+           }
+        }
         yScale.domain([0, maxY])
       }
-      function updateAreaScale(sortMetric){
-        var metric = sortMetric
-        areaScale.domain([0, d3.max(vehicles, function(d){ 
-          return d[metric] })])
+      function updateAreaScale(metric){
+        areaScale.domain([0, d3.max(vehicles[step],function(d){ return d[metric] }) ])
       }
       function createTooltip(vis){
+        d3.select('.tooltip').remove();
         tooltip = vis.append('g').attr('class', 'tooltip')
         tooltip.append('rect').attr({ width: 130, height: 200, rx: 5, ry: 5, class: 'bg' })
         var desc = tooltip.append('g').attr('class', 'desc')
         desc.append('text').attr('class', 'main').text('').attr('transform', 'translate(5,5)')
-        desc.append('text').attr('class', 'node_id').text('Vehicle: ').attr('transform', 'translate(5,25)')
+        desc.append('text').attr('class', 'id').text('Vehicle: ').attr('transform', 'translate(5,25)')
         desc.append('text').attr('class','degree').text('Degree: ').attr('transform', 'translate(5,45)')
         desc.append('text').attr('class', 'com_id').text('Community id: ').attr('transform', 'translate(5,65)')
         desc.append('text').attr('class','com_size').text('Community size: ').attr('transform', 'translate(5,85)')
+        // desc.append('text').attr('class','position').text('position: ').attr('transform', 'translate(5,105)')
         return tooltip
       }
       function posTooltip(d) {
-        var   x = d.fisheye ? d.fisheye.x : xScale(d.x)
-            , y = d.fisheye ? d.fisheye.y : yScale(maxY-d.y)
+        var   posX = d.fisheye ? d.fisheye.x : xScale(d.x)
+            , posY = maxY-d.y
+            , posY = d.fisheye ? d.fisheye.y : yScale(posY)
             , text = "size by : " + sortMetric
         tooltip.select('.main').text(text)
-        tooltip.select('.node_id').text('Vehicle: ' + d.node_id)
+        tooltip.select('.id').text('Vehicle: ' + d.id)
         tooltip.select('.degree').text('Degree: ' + d.degree)
         tooltip.select('.com_id').text('Com_id: ' + d.com_id)
         tooltip.select('.com_size').text('Com size: ' + d.com_size)
+        tooltip.select('.position').text('position: ' + posX + ' ' + posY)
         var box = tooltip.select('.desc').node().getBBox()
         box.x -= 10, box.y -= 10, box.width += 20, box.height += 20
         tooltip.select('rect').attr(box)
         var offset = d.fisheye? radius(d) * d.fisheye.z : radius(d);
-        if( x > width / 2 ) x -= box.width + offset; else x+= offset
-        if( y > height / 2 ) y -= box.height + offset; else y+= offset
-        tooltip.attr('transform', 'translate(' + x + ',' + y + ')')
+        if( posX > width / 2 ) posX -= box.width + offset; else posX+= offset
+        if( posY > height / 2 ) posY -= box.height + offset; else posY+= offset
+        tooltip
+          .attr('x',0)
+          .attr('y',0)   
+          .attr('transform', 'translate(' + posX + ',' + posY + ')')
       }
 
       function updatePos(node){
-        // node.attr('transform', function(d){    
-        //   y = maxY - d.y
-        //   return 'translate(' + xScale(d.x) + ',' + yScale(y) + ')'
-        // })
-        node.attr('cx', function(d){    
-          return xScale(d.x);
-        })
-        node.attr('cy', function(d){    
-          y = maxY - d.y
-          return yScale(y)
-        })
-        updateAreaScale(sortMetric)
+        node
+          .attr('transform', function(d){  
+            return 'translate(' + xScale(d.x) + ',' + yScale(maxY - d.y) + ')'
+          })
         node.select('circle').attr('r', radius)
         return node
       }
@@ -170,39 +231,27 @@ window.onload = function() {
         node.style("fill-opacity", .8)
       }
       function setFisheyePos(node){
-        // node.attr('transform', function(d, i){
-        //   console.log("transform d.fisheye", d.fisheye)
-        //   return 'translate(' + d.fisheye.x + ', ' + d.fisheye.y + ')'
-        // })
         if (node && node.select('circle') && node.select('circle').length > 0) {
-          node.select('circle')
-            .attr('cx', function(d){    
-              return 0 // return d.fisheye.x;
-            })
-            .attr('cy', function(d){    
-              return 0 // return d.fisheye.y
-            })
+          node
             .attr('transform', function(d){    
               return 'translate(' +  d.fisheye.x + ' , ' +  d.fisheye.y + ')';
             })
-            .attr('r', function(d){
-              var z = d.fisheye && d.fisheye.z || 1
-              if (z > 1 ) { 
-                z *= 2
-              }
-              return radius(d) * z;
-            })
-            // .attr('transform', function(d){
-            //   var z = d.fisheye && d.fisheye.z || 1
-            //   return 'scale(' + z + ')'
-            // })
+          // node.select('circle')
+          //   .attr('r', function(d){
+          //     var z = d.fisheye && d.fisheye.z || 1
+          //     if (z > 1 ) { 
+          //       z *= 2
+          //     }
+          //     return radius(d) * z;
+          //   })
+            
           // node.attr('transform', function(d, i){
           //   return 'translate(' + d.fisheye.x + ', ' + d.fisheye.y + ')'
           // })
-          // node.select('circle').attr('transform', function(d){
-          //   var z = d.fisheye && d.fisheye.z || 1
-          //   return 'scale(' + z + ')'
-          // })
+          node.select('circle').attr('transform', function(d){
+            var z = d.fisheye && d.fisheye.z || 1
+            return 'scale(' + z + ')'
+          })
           return node
         }
       }
@@ -216,14 +265,8 @@ window.onload = function() {
         var newMetric = $(this).val()
         if(sortMetric === newMetric) return
         sortMetric = newMetric
+        updateAreaScale(sortMetric)
         node.transition().duration(1000).call(updatePos)
-      })
-      $('.color-by').on('change', function(){
-        var newMetric = $(this).val()
-        // console.log("newMetric", newMetric)
-        if(newMetric === colorMetric) return
-        colorMetric = newMetric
-        node.transition().duration(2000).call(updateColor)
       })
       $(window).resize(function(){
         width = window.innerWidth
@@ -231,27 +274,32 @@ window.onload = function() {
         if(width < 450) margin_top = 20
         else margin_top = 120
         vis.style({ width: width + 'px', height: height + 'px' })
-        x.range([margin, width - margin])
-        y.range([margin_top, height - margin_bottom])
-        node.call(grid).call(updatePos)
+        node.call(updatePos)
         updateMaxArea()
         node.select('circle').attr('r', radius)
+        xScale.range([margin, max_area - margin])
+        yScale.range([margin_top, max_area - margin_bottom])
       })
       function tooltipEffect(vis) {
-         return vis.on('mouseover', function(d){
+        return vis.on('mouseover', function(d) {
             d3.select('.tooltip').style('display', 'inherit')
+            sel = d3.select(this)
+            if(sel.node() !== node) sel.classed('highlighted', true)
+            // sel.select('circle').attr('transform', 'scale(' + 2 + ')')
             posTooltip(d)
           })
           .on('mouseleave', function hideTooltip(d) {
             d3.select('.tooltip').style('display', 'none')
-          })
+            if(sel.node() !== node) sel.classed('highlighted', false)
+            // sel.select('circle').attr('transform', 'scale(' + 0.5 + ')')
+        })  
       }
       function fisheyeEffect(vis){
         return vis.on('mouseover', function(d){
+          var m = d3.mouse(this);
           // var circle = d3.select(this);
           if(!node) return
           d3.select('.tooltip').style('display', 'inherit')
-          //node.each(function(d, i){  $(this).removeClass('animated') })
         }).on("mousemove", function(d){
           if (!d) {
             var d = d3.select(this).select('circle').datum();
@@ -259,7 +307,7 @@ window.onload = function() {
           if (fisheye) {
             var m = d3.mouse(this)
             fisheye.focus(m)
-            if(!node) return
+            if (!node) return
             node.each(function(d, i){
               var prev_z = d.fisheye && d.fisheye.z || 1
               scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
@@ -274,11 +322,9 @@ window.onload = function() {
               node.each(function(d){
                 if( !max || d.fisheye.z > max.fisheye.z) { max = d; maxNode = this }
               })
+              var scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
               if(topNode !== maxNode) updateTopNode(maxNode)
             })
-          }
-          else {
-            posTooltip(d);
           }
         }).on('mouseleave', function(d){
           d3.select('.tooltip').style('display', 'none')
@@ -291,11 +337,56 @@ window.onload = function() {
         max_area = calcBestArea()
         areaScale.range([0, max_area])
       }
-
       function updateTopNode(maxNode){
         if (!maxNode) return;
         if(topNode) topNode.classed('active', false)
         topNode = d3.select(maxNode).classed('active', true)
         posTooltip(topNode.datum())
+      }
+
+      $(document).keypress(function(e){
+        if ((e.which && e.which == 32) || (e.keyCode && e.keyCode == 32)) {
+          togglePlay();
+          return false;
+        } else {
+          return true;
+        }
+      });
+      $('.playbutton').click(function(){
+        togglePlay();
+        if ($(this).hasClass("play")) {
+          $(this).addClass("pause");
+          $(this).removeClass("play");
+          play();
+        }
+        else {
+          $(this).addClass("play");
+          $(this).removeClass("pause");
+          pause();
+        }
+        return false;
+      }); 
+      function togglePlay(){
+        var $elem = $('.player').children(':first');
+        $elem.stop()
+          .show()
+          .animate({'marginTop':'-175px','marginLeft':'-175px','width':'350px','height':'350px','opacity':'0'},function(){
+            $(this).css({'width':'100px','height':'100px','margin-left':'-50px','margin-top':'-50px','opacity':'1','display':'none'});
+          });
+        $elem.parent().append($elem);
+      }
+      function play() {
+        step += stepSize;
+        onStepUpdated();
+        slider.slider({value :step });
+
+        timer = setTimeout(function() {  
+          play();
+        }, timerDelay);
+      }
+      function pause() {
+        if (timer) {
+          clearTimeout(timer);
+        }
       }
     }

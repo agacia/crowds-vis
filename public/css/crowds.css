@@ -1,4 +1,10 @@
- body{ margin: 0; font-family: helvetica; }
+      body{ 
+        margin: 0; 
+        font-family: helvetica; 
+
+        overflow: scroll;
+      }
+      
       button, select { outline: none;}
       
       /* vis */
@@ -14,14 +20,19 @@
         stroke-width: 1;
         stroke: white;
       }
+      .node.selected circle { 
+        stroke: green;
+        stroke-width: 4;
+        stroke-opacity: 1;
+      }
       .node.highlighted circle { 
         stroke: yellow;
-        stroke-width: 10;
+        stroke-width: 6;
         stroke-opacity: 0.5;
       }
-      .tooltip{ display: none; }
-      .tooltip .bg{ opacity: 0.7; }
-      .tooltip text{
+      .tooltip { display: none; position:relative; }
+      .tooltip .bg { opacity: 0.5; }
+      .tooltip text {
         fill: white;
       }
       active.tooltip{
@@ -34,27 +45,53 @@
 
       /* container */
       #container {
-        width: 600px;
-        margin: auto;
+        width: 100%;
+        margin: 0;
       }
       #vis {
-        margin: auto;
-      }
-      #controls{ 
-        float: left;
-        font-size: 14px;
+        margin: 0;
       }
       #title h1{
         text-align: left;
         margin: 10px;
         float: left;
       }
-      select{ font-size: 20px; }
+      select{ margin: 0 10px; }
       .slider {
+        margin: 0 10px;
         display: inline-block;
-        width: 100%;
+        width: 45%;
       }
-      
+      #navbar {
+        margin-top: 10px;
+      }
+      .playbutton {
+        margin-top: -8px;
+        margin-right: 8px;
+        display: inline-block;
+      }
+      .player img {
+        position:absolute;
+        top:50%;
+        left:50%;
+        margin-top:-50px;
+        margin-left:-50px;
+      }
+      .icon {
+        display: inline-block;
+        width:32px;
+        height:32px;
+        float:left;
+        text-indent: -9999px;
+        background-size: 32px 32px;
+      }
+      .play.icon {
+        background-image: url(../imgs/play.png);
+      }
+      .pause.icon {
+        background-image: url(../imgs/pause.png);
+      }
+
       @media (max-width: 900px) {
         h1, #controls{ 
           float: left;
