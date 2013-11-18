@@ -1,5 +1,5 @@
-window.onload = function() {
-  var width = window.innerWidth, height = window.innerHeight
+var crowds = function() {
+  var width = window.innerWidth, height = window .innerHeight
         , vis = d3.select('body #container').append('svg').attr('class', 'vis')
           .style({ width: width + 'px', height: height + 'px' })
         , node, max, margin = 0, max_area = 800, tooltip
@@ -8,7 +8,8 @@ window.onload = function() {
         , calcBestArea = function(){
           var r1 = (width ) 
             , r2 = (height)
-            , r = r1 > r2 ? r2 : r1
+            , r = r1 < r2 ? r2 : r1
+            d3.select('body #container .vis').style({ width: r + 'px', height: r + 'px' })
             return r
         }
         , max_area = calcBestArea()
@@ -18,7 +19,7 @@ window.onload = function() {
         , maxY = 0
         , areaToRadius = function(area, scale){ return Math.sqrt( scale * area / Math.PI) }
         , fisheye = null
-        , fisheye = d3.fisheye.circular().radius(60).distortion(3)
+        , fisheye = d3.fisheye.circular().radius(20).distortion(5)
         , color = d3.scale.category20()
         , colorMetric = 'com_id'
         , sortMetric = $('.sort-by').val()
@@ -26,7 +27,7 @@ window.onload = function() {
         , radius = function(d){ 
           var metric = sortMetric
           var scale = 1
-          if (metric == "cos_score") {
+          if (metric == "cos_score" || metric == "com_size") {
             scale = 0.4;
             if (d[metric] < 0) {
                return areaToRadius(0.1, scale)
@@ -57,7 +58,7 @@ window.onload = function() {
             return d;
         }
         , topNode = null
-        , firstStep = 0, lastStep = 700, step = 0, stepSize = 10
+        , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
         , filename ='groups_'
         // , filename = 'communities.tsv'
         , rootUrl = 'data/'
@@ -87,7 +88,6 @@ window.onload = function() {
       if ( window.self !== window.top ){
         // we're in an iframe! oh no! hide the twitter follow button
       }
-
       loadFiles(rootUrl, algorithm, filename);
       // loadFile(rootUrl + algorithm + "/" + filename);
       
@@ -306,6 +306,7 @@ window.onload = function() {
           }
           if (fisheye) {
             var m = d3.mouse(this)
+            console.log("fisheye over")
             fisheye.focus(m)
             if (!node) return
             node.each(function(d, i){
@@ -389,4 +390,5 @@ window.onload = function() {
           clearTimeout(timer);
         }
       }
+      console.log("crowds ok");
     }

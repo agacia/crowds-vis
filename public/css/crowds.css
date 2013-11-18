@@ -14,26 +14,32 @@
         top: 0px;
         z-index: -10;
       }
-      .node { fill: black; }
-      circle { stroke: none; }
+      .node { 
+        fill: black; 
+      }
+      circle { 
+        stroke: none; 
+        opacity: 0.5
+      }
       .node.active circle {
-        stroke-width: 1;
-        stroke: white;
+        stroke: black;
       }
       .node.selected circle { 
-        stroke: green;
-        stroke-width: 4;
+        stroke-width: 1;
+        stroke: red;
         stroke-opacity: 1;
       }
       .node.highlighted circle { 
-        stroke: yellow;
-        stroke-width: 6;
-        stroke-opacity: 0.5;
+        stroke-width: 1;
+        stroke: black;
+        stroke-opacity: 1;
+        opacity: 1;
       }
       .tooltip { display: none; position:relative; }
       .tooltip .bg { opacity: 0.5; }
       .tooltip text {
         fill: white;
+        font-size: 14px;
       }
       active.tooltip{
         display: inherit;
@@ -90,6 +96,36 @@
       }
       .pause.icon {
         background-image: url(../imgs/pause.png);
+      }
+
+      svg {
+        font: 10px sans-serif;
+      }
+
+      canvas, svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      #chart {
+        position: relative;
+      }
+
+      .brush .extent {
+        fill-opacity: .3;
+        stroke: #fff;
+        shape-rendering: crispEdges;
+      }
+
+      .axis line, .axis path {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+      }
+
+      .axis text {
+        text-shadow: 0 1px 0 #fff;
       }
 
       @media (max-width: 900px) {
