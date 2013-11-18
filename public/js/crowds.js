@@ -8,7 +8,8 @@ var crowds = function() {
         , calcBestArea = function(){
           var r1 = (width ) 
             , r2 = (height)
-            , r = r1 < r2 ? r2 : r1
+            , r = r1 > r2 ? r2 : r1
+            r *= 1.3
             d3.select('body #container .vis').style({ width: r + 'px', height: r + 'px' })
             return r
         }
