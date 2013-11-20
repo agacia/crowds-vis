@@ -49,9 +49,7 @@ window.onload = function() {
     // we're in an iframe! oh no! hide the twitter follow button
   }
 
-
   $('#loader').show();
-
   initializeSelect();
   initializeGraphMetrics();
   createContainers(algorithms);
@@ -107,6 +105,9 @@ window.onload = function() {
       .attr('class','title')
       .text(function(d) { return d;})
 
+    var loadedImgs = 0;
+    var totalImgs = algorithms.length * lastStep / stepSize;
+    console.log("otal", totalImgs)
     $.each(algorithms, function(algorithm) {
       var algorithmName = algorithms[algorithm]
       d3.select('.algorithm.'+algorithmName)
@@ -118,15 +119,30 @@ window.onload = function() {
       .append('img')
         .attr('class', function(d) { return "image id"+d})
         .attr('style', 'display: none')
+        .attr('onload', function() {
+          loadedImgs += 1
+          // console.log("loaded", loadedImgs)   
+          if (loadedImgs == totalImgs) {
+            console.log("loaded")
+            $(".loader").hide()
+          }
+        })
         .attr('src', function(d) {
           var imgPath = d == 0 ? rootUrl + algorithmName + "/imgs/" + filebase + "0000" + fileext
             : rootUrl + algorithmName + "/imgs/" + filebase + ("000" + (d).toString()).slice(-4) + fileext;
+            
           return imgPath;
         });
     });
+
+    $(document).ready(function(){
+      console.log("document ready")
+    });
+
     algorithm.append('div')
       .attr('class', 'chart')
       .style({ width: imgWidth + 'px', height: chartHeight + 'px' })
+    
     algorithm.append('div')
       .attr('class', 'algorithm-metrics')
       .selectAll('span')
@@ -141,7 +157,7 @@ window.onload = function() {
     // $.each(algorithms, function(algorithm) {
     // preloader.append('div')
       // });
-    $('#loader').hide();
+    // $('#loader').hide();
     createTooltip(algorithm)
   }
 
