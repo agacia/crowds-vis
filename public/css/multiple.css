@@ -38,6 +38,10 @@
   top: 0;
 }
 
+.preload {
+  display: none;
+}
+
 .metric {
   /*padding-left: 10px;*/
   display: block;

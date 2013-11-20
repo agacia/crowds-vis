@@ -115,6 +115,7 @@ window.onload = function() {
           .text(function (d) { 
             return d + ": " + 0; })
     createTooltip(algorithm)
+    preloadImages();
   }
 
   function updateAlgorithmMetrics(step) {
@@ -150,6 +151,27 @@ window.onload = function() {
       charts[algorithm].update(yMetric, yScaleMin, yScaleMax);
     });
   })
+
+  function preloadImages() {
+    var steps = d3.range(lastStep/10)
+    var preloader = d3.select('.algorithm')
+    $.each(algorithms, function(algorithm) {
+      preloader.append('div')
+        .attr('class', 'preload')
+        .selectAll('img')
+        .data(steps)
+        .enter()
+        .append('img')
+          .attr('src', function(d) {
+            // var algorithmName = algorithm.attr('class').split(' ')[1]
+            var algorithmName = algorithms[algorithm];
+            var imgPath = d == 0 ? rootUrl + algorithmName + "/imgs/" + filebase + "0000" + fileext
+              : rootUrl + algorithmName + "/imgs/" + filebase + ("000" + (d).toString()).slice(-4) + fileext;
+            console.log("preloading", imgPath)
+            return imgPath;
+          });
+      });
+  }
 
   function showImages(rootUrl, algorithms, baseFilename, fileext, step){
     d3.selectAll('.algorithm .image')
