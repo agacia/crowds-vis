@@ -99,7 +99,7 @@ window.onload = function() {
       }
 
       function loadFiles(rootUrl, algorithm, baseFilename){
-        $('#loader').show()
+        $('.loader').show()
         vehicles = {};
         dataLoaded = 0;
         vis.selectAll('.node').remove()
@@ -118,7 +118,7 @@ window.onload = function() {
       }
 
       function loadFile(url) {
-        $('#loader').show()
+        $('.loader').show()
         d3.tsv(url, format, function(err, rows){
           if(err) throw err
           // get only for a single step at once
@@ -142,7 +142,7 @@ window.onload = function() {
         }
       }
       function showVehicles(vehicles) { 
-        $('#loader').hide()
+        $('.loader').hide()
         // console.log("showing step ", step, vehicles)  
         updateAreaScale(sortMetric)
         var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
