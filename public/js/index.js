@@ -1,5 +1,6 @@
 window.onload = function() {
-      crowds();    
+      crowdsImg();
+      // crowds();    
       // chart();
       // map_canvas();
   }

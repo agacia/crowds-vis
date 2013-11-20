@@ -1,0 +1,52 @@
+.algorithm {
+  float: left;
+  position: relative;
+  border: 1px dashed #ccc;
+  padding: 10px;
+}
+.algorithm .title {
+  text-align: center;
+}
+
+.algorithm .chart {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+.algorithm .image {
+  display: block;
+  margin-top: -20px;
+  margin-left: -10px;
+  margin-right: -10px;
+  margin-bottom: -90px;
+}
+
+.graph-metrics {
+  display: block;
+}
+
+.metric {
+  padding-left: 10px;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.area {
+  fill: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}

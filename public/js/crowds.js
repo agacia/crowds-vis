@@ -62,7 +62,7 @@ var crowds = function() {
         , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
         , filename ='groups_'
         // , filename = 'communities.tsv'
-        , rootUrl = 'data/'
+        , rootUrl = 'data/algoritms/'
         // , algorithm = 'MobileLeung'
         , algorithm = 'MobileLeungSDSD'
         , slider = $( ".slider" ).slider({
@@ -90,7 +90,7 @@ var crowds = function() {
         // we're in an iframe! oh no! hide the twitter follow button
       }
       loadFiles(rootUrl, algorithm, filename);
-      // loadFile(rootUrl + algorithm + "/" + filename);
+      // loadFile(rootUrl + algorithm + "/groups/" + filename);
       
       function onStepUpdated() {
         showVehicles(vehicles[step])
@@ -99,7 +99,7 @@ var crowds = function() {
 
       function loadFiles(rootUrl, algorithm, baseFilename){
         for (var i = firstStep; i < lastStep; i += stepSize) {
-          var reqUrl = rootUrl + algorithm + "/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
+          var reqUrl = rootUrl + algorithm + "/groups/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
           // 'data/MobileLeung/communities.tsv'
           d3.tsv(reqUrl, formatGroup, function(err, rows){
             if(err) throw err
@@ -111,6 +111,7 @@ var crowds = function() {
           })
         }
       }
+
       function loadFile(url) {
         d3.tsv(url, format, function(err, rows){
           if(err) throw err
