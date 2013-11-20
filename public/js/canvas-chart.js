@@ -1,4 +1,8 @@
 
+        // canvas#background
+        // canvas#foreground
+        // vis
+        
 var chart = function() {
   window.requestAnimFrame = (function(){
   return window.requestAnimationFrame       ||

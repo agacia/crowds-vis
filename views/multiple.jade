@@ -1,0 +1,34 @@
+extends layout
+
+block styles
+	link(rel='stylesheet', href='/css/multiple.css')
+
+block content
+	<a class="playbutton play icon">Pause / Play</a>
+	
+	span.player
+		<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+		<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+	
+	span Time:
+		span(class="slider")
+	
+	span Chart: 
+		select(class="sort-by")
+			option(value="com_size") Community size 
+			option(value="degree") Degree 
+			option(value="cos_score") Community score
+
+	
+	span.graph-metrics
+		span.title
+			p Graph statistics:
+		span.metrics
+
+	div.algorithms
+
+
+block scripts
+	<script src="js/line-chart.js"></script>
+	<script src="js/multiple.js"></script>
+	

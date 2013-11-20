@@ -1,4 +1,4 @@
-var crowdsImg = function() {
+window.onload = function() {
   var width = window.innerWidth, height = window .innerHeight
     , format = function(d){ // when read cvs
         // step nodes edges singletons  connected avg_degree  degree_distribution diameter  avg_clustering_coefficient  cc_count  avg_cc_size max_cc_size max_cc_id cc_std_dev  com_count avg_com_size  max_com_size  max_com_id  min_com_size  min_com_id  std_com_dist  modularity  com_modularity  iterations  iteration_modularities
@@ -11,6 +11,7 @@ var crowdsImg = function() {
     }
     ,graphMetrics = ['nodes', 'edges', 'singletons', 'connected', 'avg_degree', 'diameter', 
           'avg_clustering_coefficient', 'cc_count', 'avg_cc_size', 'max_cc_size', 'max_cc_id', 'cc_std_dev']
+    , algorithmMetrics = ['com_count', 'avg_com_size', 'max_com_size', 'max_com_id', 'com_modularity']
     , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
     , imgWidth = 500
     , imgHeight = 400
@@ -35,6 +36,9 @@ var crowdsImg = function() {
     , charts = {}
     , data = {}
     , yScaleMax = 0, yScaleMin = 99999
+    , timer
+    , timerDelay = 300
+
 
   $(".slider").slider()
     .find(".ui-slider-handle")
@@ -63,28 +67,31 @@ var crowdsImg = function() {
   }
 
   function initializeGraphMetrics() {
-    d3.select('.graph-metrics').selectAll('span')
+    d3.select('.graph-metrics .metrics').selectAll('span')
       .data(graphMetrics)
       .enter()
         .append('span')
-        .attr('class', function(d) { return 'metric '+d })
-        .text(function(d) { return d + ': '})
+        .attr('class', function(d) { return 'metric '+ d })
+        .text(function(d) { 
+          metricName = d == 'avg_clustering_coefficient' ? 'clustering_coeff' : d;
+          return metricName + ': '})
   }
 
   function updateGraphMetrics(step) {
     if (algorithms.length == 0) return;
     var graphData = data[algorithms[0]]
-    d3.select('.graph-metrics').selectAll('span')
+    d3.select('.graph-metrics .metrics').selectAll('span')
       .data(graphMetrics)
         .text(function(d) { 
           var value = graphData[step][d]; 
+          metricName = d == 'avg_clustering_coefficient' ? 'clustering_coeff' : d;
           if (d!='nodes' && d!='edges' && d!='max_cc_id' && d!='cc_count' && d!='singletons' && d!='connected') {
             value = value.toFixed(2)
           }
-          return d + ': ' + value});
+          return metricName + ': ' + value});
   }
   function createContainers(algorithms) {
-    algorithm = d3.select('.algorithms').selectAll('.algoritm')
+    algorithm = d3.select('.algorithms').selectAll('.algorithm')
       .data(algorithms)
       .enter()
         .append('div')
@@ -98,12 +105,40 @@ var crowdsImg = function() {
     algorithm.append('div')
       .attr('class', 'chart')
       .style({ width: imgWidth + 'px', height: 200 + 'px' })
+    algorithm.append('div')
+      .attr('class', 'algorithm-metrics')
+      .selectAll('span')
+      .data(algorithmMetrics)
+      .enter()
+        .append('span')
+          .attr('class', function (d) { return "metric " + d})
+          .text(function (d) { 
+            return d + ": " + 0; })
     createTooltip(algorithm)
+  }
+
+  function updateAlgorithmMetrics(step) {
+    algorithm = d3.select('.algorithms').selectAll('.algorithm')
+    algorithm.selectAll('span')
+      .data(algorithmMetrics)
+        .text(function (d) { 
+          var algorithmName = algorithm.attr('class').split(' ')
+          algorithmName = algorithmName.length > 0 ? algorithmName[1] : 0
+          var value = algorithmName == 0 ? 0 : data[algorithmName][step][d];
+          if (d=='avg_com_size' || d=='com_modularity') {
+            value = value.toFixed(2)
+          }
+          return d + ": " + value; })
   }
 
   function onStepUpdated() {
     showImages(rootUrl, algorithms, filebase, fileext, step);
-    updateGraphMetrics(step);
+    updateGraphMetrics(step);    
+    updateAlgorithmMetrics(step);
+    $.each(charts, function (algorithm) { 
+      charts[algorithm].moveBrush(step);
+    });
+    dateLabel.text(step)
   }
 
   $('.sort-by').on('change', function(){
@@ -147,6 +182,7 @@ var crowdsImg = function() {
           updateYScale();
           charts[algorithm].update(yMetric, yScaleMin, yScaleMax);
           updateGraphMetrics(step);
+          updateAlgorithmMetrics(step);
         })
       }
     });
@@ -225,6 +261,12 @@ var crowdsImg = function() {
   $(document).keypress(function(e){
     if ((e.which && e.which == 32) || (e.keyCode && e.keyCode == 32)) {
       togglePlay();
+      if (timer) {
+        pause();
+      }
+      else {
+        play();
+      }
       return false;
     } else {
       return true;
@@ -264,6 +306,7 @@ var crowdsImg = function() {
   function pause() {
     if (timer) {
       clearTimeout(timer);
+      timer = 0
     }
   }
 }

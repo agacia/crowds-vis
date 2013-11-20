@@ -5,7 +5,7 @@
   padding: 10px;
 }
 .algorithm .title {
-  text-align: center;
+  text-align: left;
 }
 
 .algorithm .chart {
@@ -22,12 +22,25 @@
   margin-bottom: -90px;
 }
 
+.algorithm-metrics {
+  /*display: none;*/
+  position: absolute;
+  right: 8px;
+  top: 8px;
+}
+
 .graph-metrics {
   display: block;
+  float: right;
+  width: 200px;
+  float:right;
+  right: 0;
+  top: 0;
 }
 
 .metric {
-  padding-left: 10px;
+  /*padding-left: 10px;*/
+  display: block;
 }
 
 .axis path,
@@ -49,4 +62,8 @@
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;
+}
+
+.brush  {
+  opacity: 0.5;
 }

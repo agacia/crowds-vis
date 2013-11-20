@@ -1,0 +1,35 @@
+extends layout
+
+block styles
+	link(rel='stylesheet', href='/css/single.css')
+
+block content
+	span.algorithm Algorithm: 
+		select(class="algorithm-select")
+			option(value="MobileLeungSDSD") Mobile Leung (SDSD) 
+			option(value="MobileLeungDSD") Mobile Leung (DSD)
+			option(value="SandSharc") Sand-Sharc 
+			option(value="Leung") Leung
+			option(value="EpidemicCommunityAlgorithm") Epidemic
+
+	<a class="playbutton play icon">Pause / Play</a>
+	
+	span.player
+		<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+		<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+	
+	span Time:
+		span(class="slider")
+	
+	span Sort by: 
+		select(class="sort-by")
+			option(value="com_size") Community size 
+			option(value="degree") Degree 
+			option(value="cos_score") Community score
+	
+	#container
+		.vis
+
+block scripts
+	<script src="js/single.js"></script>
+	<script src="js/fisheye.js"></script>

@@ -1,0 +1,71 @@
+#container {
+width: 100%;
+margin: 0;
+}
+
+/* vis */
+.vis{
+position: absolute;
+left: 0px;
+top: 0px;
+z-index: -10;
+}
+
+.node { 
+fill: black; 
+}
+
+circle { 
+stroke: none; 
+opacity: 0.5
+}
+
+.node.active circle {
+stroke: black;
+}
+.node.selected circle { 
+stroke-width: 1;
+stroke: red;
+stroke-opacity: 1;
+}
+.node.highlighted circle { 
+stroke-width: 1;
+stroke: black;
+stroke-opacity: 1;
+opacity: 1;
+}
+.node text{
+text-anchor: middle;
+fill: black;
+}
+
+svg {
+font: 10px sans-serif;
+}
+
+canvas, svg {
+position: absolute;
+top: 0;
+left: 0;
+}
+
+#chart {
+position: relative;
+}
+
+.brush .extent {
+fill-opacity: .3;
+stroke: #fff;
+shape-rendering: crispEdges;
+}
+
+.axis line, .axis path {
+fill: none;
+stroke: #000;
+shape-rendering: crispEdges;
+}
+
+.axis text {
+text-shadow: 0 1px 0 #fff;
+}
+

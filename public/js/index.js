@@ -1,5 +1,6 @@
 window.onload = function() {
-      crowdsImg();
+	console.log("index.js onload")
+      // crowdsImg();
       // crowds();    
       // chart();
       // map_canvas();

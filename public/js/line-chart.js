@@ -14,7 +14,8 @@ function lineChart() {
       xMetric = "step",
       yMetric = "com_count",
       data = [],
-      svg
+      svg,
+      step = 0
 
   function chart(selection) {
     selection.each(function(selectionData) {
@@ -42,6 +43,13 @@ function lineChart() {
       gEnter.append("path").attr("class", "line");
       gEnter.append("g").attr("class", "x axis");
       gEnter.append("g").attr("class", "y axis");
+      gEnter.append("g")
+        .attr('class', "brush")
+        .append('rect')
+          .attr("width", 4)
+          .attr("height", height)
+          .attr("x", 0)
+          .attr("y", 0);  
 
       // Update the outer dimensions.
       svg .attr("width", width)
@@ -70,6 +78,9 @@ function lineChart() {
       g.select(".y.axis")
         .attr("transform", "translate(" + 0 + ",0)")
         .call(yAxis);
+
+      g.select(".brush")
+        .attr("transform", "translate(" + xScale(step) + ",0)")
 
     });
   }
@@ -117,6 +128,13 @@ function lineChart() {
     yValue = _;
     return chart;
   };
+
+  chart.moveBrush = function(step) {
+    var g = svg.select("g")
+    g.select(".brush")
+      .attr("transform", "translate(" + xScale(step) + ",0)")
+
+  }
 
   chart.update = function(metric, min, max) {
     yMetric = metric;

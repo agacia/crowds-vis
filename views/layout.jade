@@ -4,46 +4,17 @@ html
 		title= title
 		link(rel='stylesheet', href='/css/style.css')
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
-		link(rel='stylesheet', href='/css/crowds.css')
-		link(rel='stylesheet', href='/css/algorithm.css')
+		block styles
 		<meta name="viewport" content="width=800, user-scalable=0">
 		
 
 	body
-		#container
-			#navbar
-				<a class="playbutton play icon">Pause / Play</a>
-				span.player
-					<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
-					<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
-				
-				span Time:
-					span(class="slider")
-				
-				span Chart: 
-					select(class="sort-by")
-						option(value="com_size") Community size 
-						option(value="degree") Degree 
-						option(value="cos_score") Community score
-				
-				span.graph-metrics
-				
-				div.algorithms
-
-				canvas#background
-				canvas#foreground
-				
-				p#example
+		#loader
 
 		block content
 
 		<script src="js/d3.js" charset="utf-8"></script>
-		<script src="js/fisheye.js"></script>
-		<script src="js/line-chart.js"></script>
 		<script src="js/jquery.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-		<script src="js/crowds.js"></script>
-		<script src="js/crowds_img.js"></script>
-		<script src="js/chart.js"></script>
-		<script src="js/map_canvas.js"></script>
-		<script src="js/index.js"></script>
+		block scripts
+		

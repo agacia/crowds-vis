@@ -1,9 +1,10 @@
-var crowds = function() {
+window.onload = function() {
   var width = window.innerWidth, height = window .innerHeight
         , vis = d3.select('body #container').append('svg').attr('class', 'vis')
           .style({ width: width + 'px', height: height + 'px' })
         , node, max, margin = 0, max_area = 800, tooltip
-        , margin_top = (width > 450) ? 10 : 5
+        , margin_top = (width > 450) ? 0 : 5
+        , margin_top = -20
         , margin_bottom = 0, steps_x = 100, steps_y = 28
         , calcBestArea = function(){
           var r1 = (width ) 
@@ -24,6 +25,7 @@ var crowds = function() {
         , color = d3.scale.category20()
         , colorMetric = 'com_id'
         , sortMetric = $('.sort-by').val()
+        , algorithm = $('.algorithm-select').val()
         , id = 0, order = 0
         , radius = function(d){ 
           var metric = sortMetric
@@ -62,9 +64,7 @@ var crowds = function() {
         , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
         , filename ='groups_'
         // , filename = 'communities.tsv'
-        , rootUrl = 'data/algoritms/'
-        // , algorithm = 'MobileLeung'
-        , algorithm = 'MobileLeungSDSD'
+        , rootUrl = 'data/algorithms/'
         , slider = $( ".slider" ).slider({
             min: firstStep,
             max: lastStep,
@@ -80,6 +80,7 @@ var crowds = function() {
                     .text(step)
         , vehicles = {}
         , dataLoaded = 0
+        , timer
         , timerDelay = 300
 
       $(".slider").slider()
@@ -98,6 +99,10 @@ var crowds = function() {
       }
 
       function loadFiles(rootUrl, algorithm, baseFilename){
+        $('#loader').show()
+        vehicles = {};
+        dataLoaded = 0;
+        vis.selectAll('.node').remove()
         for (var i = firstStep; i < lastStep; i += stepSize) {
           var reqUrl = rootUrl + algorithm + "/groups/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
           // 'data/MobileLeung/communities.tsv'
@@ -113,6 +118,7 @@ var crowds = function() {
       }
 
       function loadFile(url) {
+        $('#loader').show()
         d3.tsv(url, format, function(err, rows){
           if(err) throw err
           // get only for a single step at once
@@ -136,10 +142,11 @@ var crowds = function() {
         }
       }
       function showVehicles(vehicles) { 
-        console.log("showing step ", step, vehicles)  
+        $('#loader').hide()
+        // console.log("showing step ", step, vehicles)  
         updateAreaScale(sortMetric)
         var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
-        console.log("step", step, " exit nodes ", exitNodes)
+        // console.log("step", step, " exit nodes ", exitNodes)
         exitNodes
           // .transition().duration(900).style("opacity",0)
           .remove();
@@ -265,10 +272,16 @@ var crowds = function() {
       }
       $('.sort-by').on('change', function(){
         var newMetric = $(this).val()
-        if(sortMetric === newMetric) return
+        if (sortMetric === newMetric) return
         sortMetric = newMetric
         updateAreaScale(sortMetric)
         node.transition().duration(1000).call(updatePos)
+      })
+      $('.algorithm-select').on('change', function(){
+        var newAlgorithm = $(this).val()
+        if (algorithm === newAlgorithm) return
+        algorithm = newAlgorithm
+        loadFiles(rootUrl, algorithm, filename);
       })
       $(window).resize(function(){
         width = window.innerWidth
@@ -308,7 +321,6 @@ var crowds = function() {
           }
           if (fisheye) {
             var m = d3.mouse(this)
-            console.log("fisheye over")
             fisheye.focus(m)
             if (!node) return
             node.each(function(d, i){
@@ -350,6 +362,12 @@ var crowds = function() {
       $(document).keypress(function(e){
         if ((e.which && e.which == 32) || (e.keyCode && e.keyCode == 32)) {
           togglePlay();
+          if (timer) {
+            pause();
+          }
+          else {
+            play();
+          }
           return false;
         } else {
           return true;
@@ -382,7 +400,6 @@ var crowds = function() {
         step += stepSize;
         onStepUpdated();
         slider.slider({value :step });
-
         timer = setTimeout(function() {  
           play();
         }, timerDelay);
@@ -390,7 +407,7 @@ var crowds = function() {
       function pause() {
         if (timer) {
           clearTimeout(timer);
+          timer = 0
         }
       }
-      console.log("crowds ok");
     }
