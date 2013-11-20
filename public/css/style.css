@@ -19,7 +19,7 @@ margin-top: 10px;
 }
 
 .loader {
-	/*display: none;*/
+	display: none;
 	width: 64px;
 	height: 64px;
 	position:absolute;
