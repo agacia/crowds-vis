@@ -47,7 +47,7 @@ function lineChart() {
         .attr('class', "brush")
         .append('rect')
           .attr("width", 4)
-          .attr("height", height)
+          .attr("height", height-margin.top)
           .attr("x", 0)
           .attr("y", 0);  
 
@@ -57,7 +57,7 @@ function lineChart() {
 
       // Update the inner dimensions.
       var g = svg.select("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          .attr("transform", "translate(" + margin.left + "," + 0 + ")");
 
       // Update the area path.
       g.select(".area")
@@ -140,13 +140,22 @@ function lineChart() {
     yMetric = metric;
     yScaleMax = max;
     yScaleMin = min;
+    // Update the x-scale.
+    xScale.range([0, width - margin.left - margin.right]);
     // update y scale
     yMax = yScaleMax ? yScaleMax : d3.max(data, function(d) { return d[yMetric]; });
     yMin = yScaleMin ? yScaleMin : d3.min(data, function(d) { return d[yMetric]; });
     yScale.domain([yMin, yMax])
+      .range([height - margin.top - margin.bottom, 0]);
     // console.log("update with metric ", yMetric, " yMax ", yScaleMax)
-    
+
+    // Update the outer dimensions.
+    svg.attr("width", width)
+      .attr("height", height);
+
     var g = svg.select("g")
+      .style({ width: width + 'px', height: height + 'px' })
+
     // Update the area path.
     g.select(".area")
       .transition().ease("linear").duration(600)
@@ -162,6 +171,9 @@ function lineChart() {
     g.select(".y.axis")
       .attr("transform", "translate(" + 0 + ",0)")
       .call(yAxis);
+
+    svg.select(".brush rect")
+       .attr("height", height-margin.top)
   }
 
   chart.yMetric = function(_) {

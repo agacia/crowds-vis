@@ -15,7 +15,6 @@
 }
 
 .algorithm .image {
-  display: block;
   margin-top: -20px;
   margin-left: -10px;
   margin-right: -10px;
@@ -39,7 +38,12 @@
 }
 
 .preload {
+  position: relative;
+}
+
+.preload img {
   display: none;
+  /*position: relative;*/
 }
 
 .metric {
@@ -55,7 +59,7 @@
 }
 
 .x.axis path {
-  display: none;
+  /*display: none;*/
 }
 
 .area {

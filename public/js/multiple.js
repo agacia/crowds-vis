@@ -13,8 +13,9 @@ window.onload = function() {
           'avg_clustering_coefficient', 'cc_count', 'avg_cc_size', 'max_cc_size', 'max_cc_id', 'cc_std_dev']
     , algorithmMetrics = ['com_count', 'avg_com_size', 'max_com_size', 'max_com_id', 'com_modularity']
     , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
-    , imgWidth = 500
-    , imgHeight = 400
+    , imgWidth = 600
+    , imgHeight = 600
+    , chartHeight = 200
     , filebase ='img_'
     , fileext = ".png"
     , rootUrl = 'data/algorithms/'
@@ -47,6 +48,9 @@ window.onload = function() {
   if ( window.self !== window.top ){
     // we're in an iframe! oh no! hide the twitter follow button
   }
+
+
+  $('#loader').show();
 
   initializeSelect();
   initializeGraphMetrics();
@@ -91,20 +95,38 @@ window.onload = function() {
           return metricName + ': ' + value});
   }
   function createContainers(algorithms) {
+    var steps = d3.range(lastStep/10)
+    
     algorithm = d3.select('.algorithms').selectAll('.algorithm')
       .data(algorithms)
       .enter()
         .append('div')
         .attr('class', function(d, i) { return 'algorithm ' + d; })
+    
     algorithm.append('p')
       .attr('class','title')
       .text(function(d) { return d;})
-    algorithm.append('img')
-      .attr('class', 'image')
-      .style({ width: imgWidth + 'px', height: imgHeight + 'px' })
+
+    $.each(algorithms, function(algorithm) {
+      var algorithmName = algorithms[algorithm]
+      d3.select('.algorithm.'+algorithmName)
+      .append('div')
+      .attr("class","preload")
+      .selectAll('img')
+      .data(steps)
+      .enter()
+      .append('img')
+        .attr('class', function(d) { return "image id"+d})
+        .attr('style', 'display: none')
+        .attr('src', function(d) {
+          var imgPath = d == 0 ? rootUrl + algorithmName + "/imgs/" + filebase + "0000" + fileext
+            : rootUrl + algorithmName + "/imgs/" + filebase + ("000" + (d).toString()).slice(-4) + fileext;
+          return imgPath;
+        });
+    });
     algorithm.append('div')
       .attr('class', 'chart')
-      .style({ width: imgWidth + 'px', height: 200 + 'px' })
+      .style({ width: imgWidth + 'px', height: chartHeight + 'px' })
     algorithm.append('div')
       .attr('class', 'algorithm-metrics')
       .selectAll('span')
@@ -114,22 +136,28 @@ window.onload = function() {
           .attr('class', function (d) { return "metric " + d})
           .text(function (d) { 
             return d + ": " + 0; })
+    
+    // var preloader = d3.select('.algorithm')
+    // $.each(algorithms, function(algorithm) {
+    // preloader.append('div')
+      // });
+    $('#loader').hide();
     createTooltip(algorithm)
-    preloadImages();
   }
 
   function updateAlgorithmMetrics(step) {
-    algorithm = d3.select('.algorithms').selectAll('.algorithm')
-    algorithm.selectAll('span')
+    $.each(algorithms, function(algorithm) {
+      var algorithmName = algorithms[algorithm]
+      d3.select('.algorithm.'+algorithmName)
+      .selectAll('span')
       .data(algorithmMetrics)
         .text(function (d) { 
-          var algorithmName = algorithm.attr('class').split(' ')
-          algorithmName = algorithmName.length > 0 ? algorithmName[1] : 0
           var value = algorithmName == 0 ? 0 : data[algorithmName][step][d];
           if (d=='avg_com_size' || d=='com_modularity') {
             value = value.toFixed(2)
           }
           return d + ": " + value; })
+    });
   }
 
   function onStepUpdated() {
@@ -152,35 +180,50 @@ window.onload = function() {
     });
   })
 
-  function preloadImages() {
-    var steps = d3.range(lastStep/10)
-    var preloader = d3.select('.algorithm')
-    $.each(algorithms, function(algorithm) {
-      preloader.append('div')
-        .attr('class', 'preload')
-        .selectAll('img')
-        .data(steps)
-        .enter()
-        .append('img')
-          .attr('src', function(d) {
-            // var algorithmName = algorithm.attr('class').split(' ')[1]
-            var algorithmName = algorithms[algorithm];
-            var imgPath = d == 0 ? rootUrl + algorithmName + "/imgs/" + filebase + "0000" + fileext
-              : rootUrl + algorithmName + "/imgs/" + filebase + ("000" + (d).toString()).slice(-4) + fileext;
-            console.log("preloading", imgPath)
-            return imgPath;
-          });
-      });
+  $('.zoom-in.btn').on('click', function() {
+    imgWidth += 10;
+    imgHeight += 10;
+    chartHeight += 4
+    updateSize();
+  });
+
+  $('.zoom-out.btn').on('click', function() {
+    imgWidth -= 10;
+    imgHeight -= 10;
+    chartHeight -= 4;
+    updateSize();
+  });
+  
+  function updateSize() {
+    var width = d3.selectAll('.preload img').style('width')
+    d3.selectAll('.preload img')
+      .style({ width: imgWidth + 'px', height: imgHeight + 'px' })
+    d3.selectAll('.chart')
+      .style({ width: imgWidth + 'px', height: chartHeight + 'px' })
+    $.each(charts, function(algorithm) {
+      charts[algorithm].width(imgWidth)
+      charts[algorithm].height(chartHeight)
+      charts[algorithm].update(yMetric, yScaleMin, yScaleMax);
+      updateGraphMetrics(step);
+      updateAlgorithmMetrics(step);
+    })
   }
 
   function showImages(rootUrl, algorithms, baseFilename, fileext, step){
-    d3.selectAll('.algorithm .image')
-      .data(algorithms)
-      .attr('src', function(d) {
-        var imgPath = step == 0 ? rootUrl + d + "/imgs/" + baseFilename + "0000" + fileext
-          : rootUrl + d + "/imgs/" + baseFilename + ("000" + (step/10).toString()).slice(-4) + fileext;
-        return imgPath;
-      })
+    
+    var preloadClass = ".preload img.id" + step/10;
+    d3.selectAll('.preload img')
+      .attr('style', 'display: none')
+    var toShow = d3.selectAll(preloadClass)
+    toShow.attr('style', 'display: block')
+      // d3.selectAll('.algorithm .image')
+      // .data(algorithms)
+      
+      // .attr('src', function(d) {
+      //   var imgPath = step == 0 ? rootUrl + d + "/imgs/" + baseFilename + "0000" + fileext
+      //     : rootUrl + d + "/imgs/" + baseFilename + ("000" + (step/10).toString()).slice(-4) + fileext;
+      //   return imgPath;
+      // })
   }
   function loadGraphFiles(rootUrl) {
     var reqUrl = rootUrl + algorithms[downloadedCount] + "/graph.txt"
