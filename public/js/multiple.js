@@ -19,6 +19,7 @@ window.onload = function() {
     , filebase ='img_'
     , fileext = ".png"
     , rootUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/algorithms/'
+    , graphRootUrl = 'data/algorithms/'
     , algorithms = ['MobileLeungSDSD', 'SandSharc', 'EpidemicCommunityAlgorithm', 'Leung', 'MobileLeungDSD']
     , downloadedCount = 0
     , slider = $( ".slider" ).slider({
@@ -242,7 +243,7 @@ window.onload = function() {
       // })
   }
   function loadGraphFiles(rootUrl) {
-    var reqUrl = rootUrl + algorithms[downloadedCount] + "/graph.txt"
+    var reqUrl = graphRootUrl + algorithms[downloadedCount] + "/graph.txt"
     d3.tsv(reqUrl, format, function(err, rows) {
       if(err) throw err
       var chart = lineChart()
