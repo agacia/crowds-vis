@@ -63,8 +63,8 @@ window.onload = function() {
         , topNode = null
         , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
         , filename ='groups_'
-        // , filename = 'communities.tsv'
-        , rootUrl = 'data/algorithms/'
+        , rootUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/algorithms/'
+        , grapRootUrl = 'data/algorithms/'
         , slider = $( ".slider" ).slider({
             min: firstStep,
             max: lastStep,
