@@ -1,0 +1,38 @@
+extends layout
+
+block styles
+
+	<link rel="stylesheet" href="/css/vendor/slider.css">
+	<link rel="stylesheet" href="/css/vendor/leaflet.css">
+	<link rel="stylesheet" href="/css/vendor/leaflet.ie.css">
+	link(rel='stylesheet', href='/css/traffic.css')
+
+block content
+	.container
+		h2 Traffic
+		label Time:
+		span.clock CLOCK
+		.player
+			span(class="btn-group playerBtn" data-toggle="buttons")
+				<label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
+				<label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
+		
+		.slider-wrapper
+			#slider
+		.map
+			.overlay_selection
+				<h5>Show:</h5>
+				<span></span>
+			.route_selection
+				<h5>Available routes:</h5>
+				<span></span>
+			#map_item
+
+
+block scripts
+	<script src="js/vendor/bootstrap-datepicker.js"></script>
+	<script src="js/vendor/bootstrap-slider.js"></script>	
+	<script src="js/vendor/leaflet.js"></script>
+	<script src="js/vendor/tile.stamen.js"></script>
+	<script src="js/vendor/vega.js"></script>
+	<script src="js/traffic.js"></script>

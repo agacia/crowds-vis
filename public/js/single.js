@@ -82,6 +82,8 @@ window.onload = function() {
         , dataLoaded = 0
         , timer
         , timerDelay = 300
+        , trackedNode = 0
+        , staticTooltip
 
       $(".slider").slider()
         .find(".ui-slider-handle")
@@ -91,11 +93,14 @@ window.onload = function() {
         // we're in an iframe! oh no! hide the twitter follow button
       }
       loadFiles(rootUrl, algorithm, filename);
+      vis.call(createStaticTooltip);
+      vis.call(createTooltip)   
       // loadFile(rootUrl + algorithm + "/groups/" + filename);
       
       function onStepUpdated() {
         showVehicles(vehicles[step])
-        dateLabel.text(step)
+        dateLabel.text(step)        
+        updateStaticTooltip(step);
       }
 
       function loadFiles(rootUrl, algorithm, baseFilename){
@@ -158,15 +163,24 @@ window.onload = function() {
         node.on('click', function(){
           var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
             , sel = d3.select(this)
+          
           if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
+          var startTracking = d3.select(this).classed('selected')
+          if (startTracking) {
+            trackedNode = sel
+            updateStaticTooltip(step);
+          }
+          else {
+            trackedNode = 0
+          }
         })
         node.append('circle')
           .call(updateColor)
         node.call(updatePos) 
           // .call(tooltipEffect);
         fisheyeEffect(vis)
-        vis.call(createTooltip)   
       }
+      
       function updateXScale(metric) {
         maxX = 0;
         for (var i = firstStep; i < lastStep; i += stepSize)  {
@@ -204,11 +218,48 @@ window.onload = function() {
         // desc.append('text').attr('class','position').text('position: ').attr('transform', 'translate(5,105)')
         return tooltip
       }
+      function createStaticTooltip(vis){
+        // d3.select('.staticTooltip').remove();
+        console.log("pos", max_area)
+        staticTooltip = vis.append('g').attr('class', 'staticTooltip')
+            .attr('x',0)
+            .attr('y',0)   
+            .attr('transform', 'translate(' + 30 + ',' + 60 + ')')
+        staticTooltip.append('rect').attr({ width: 240, height: 30, rx: 5, ry: 5, class: 'bg' })
+        var desc = staticTooltip.append('g').attr('class', 'desc')
+        desc.append('text').attr('class', 'main').text("Click on a dot to track a vehicle").attr('transform', 'translate(5,15)')
+        desc.append('text').attr('class', 'id').attr('transform', 'translate(5,35)')
+        desc.append('text').attr('class','degree').attr('transform', 'translate(5,55)')
+        desc.append('text').attr('class', 'com_id').attr('transform', 'translate(5,75)')
+        desc.append('text').attr('class','com_size').attr('transform', 'translate(5,95)')
+        desc.append('text').attr('class','position').attr('transform', 'translate(5,105)')
+        return staticTooltip
+      }
+      function updateStaticTooltip(step) {
+        if (trackedNode) {
+          // find node's data for the current step
+          trackedNode = vis.selectAll('.node').filter(function(d, i) { return d['id']==trackedNode.data()[0]['id']  ? d : null });
+          // console.log("trackedNode", trackedNode)
+          trackedNode.classed('selected',true)
+          d = trackedNode.data()[0];
+          if (d) {
+            // console.log("show data ", trackedNode.data()[0]['id'])
+            staticTooltip.select('rect').transition().attr({ width: 250, height: 100, rx: 5, ry: 5, class: 'bg' })
+            staticTooltip.select('.main').text("Tracked vehicle:")
+            staticTooltip.select('.id').text('Vehicle: ' + d.id)
+            staticTooltip.select('.degree').text('Degree: ' + d.degree)
+            staticTooltip.select('.com_id').text('Com_id: ' + d.com_id)
+            staticTooltip.select('.com_size').text('Com size: ' + d.com_size)
+            //trackedNode.classed('selected')
+          }
+        }
+      }
       function posTooltip(d) {
         var   posX = d.fisheye ? d.fisheye.x : xScale(d.x)
             , posY = maxY-d.y
             , posY = d.fisheye ? d.fisheye.y : yScale(posY)
             , text = "size by : " + sortMetric
+        
         tooltip.select('.main').text(text)
         tooltip.select('.id').text('Vehicle: ' + d.id)
         tooltip.select('.degree').text('Degree: ' + d.degree)
@@ -221,10 +272,13 @@ window.onload = function() {
         var offset = d.fisheye? radius(d) * d.fisheye.z : radius(d);
         if( posX > width / 2 ) posX -= box.width + offset; else posX+= offset
         if( posY > height / 2 ) posY -= box.height + offset; else posY+= offset
-        tooltip
-          .attr('x',0)
-          .attr('y',0)   
-          .attr('transform', 'translate(' + posX + ',' + posY + ')')
+        if (!$('.tooltip').hasClass('static')) {
+          tooltip
+            .attr('x',0)
+            .attr('y',0)   
+            .attr('transform', 'translate(' + posX + ',' + posY + ')')
+            // .attr('transform', 'translate(' + 30 + ',' + 120 + ')')
+        }
       }
 
       function updatePos(node){

@@ -1,0 +1,58 @@
+extends layout
+
+block header
+	.header
+		ul.nav.nav-pills.pull-right
+			li <a href="#">Home</a>
+			li.active <a href="/index-vis">Explore</a>
+			li <a href="/about">About</a>
+		h3.text-muted my mushy visusalisations
+
+block content
+	.container
+		.row
+			h4 Community detection in mobile ad hoc networks in large scale vehicular traces
+			.col-sm-6.col-md-4
+				.thumbnail
+					a(href="/single")
+						.caption
+							p Detailed visualisation of community formation
+						img(src="imgs/demos/single.png", class="img-responsive", alt="...")
+			.col-sm-6.col-md-4
+				.thumbnail
+					a(href="/multiple")
+						.caption
+							p Comparison of multiple community detection algorithms
+						img(src="imgs/demos/multiple.png", class="img-responsive", alt="...")
+			.col-sm-6.col-md-4
+				.thumbnail
+					a(href="/highway")
+						.caption
+							p Community formation on higways
+						img(data-src="holder.js/300x200", class="img-responsive", alt="...")
+		.row
+			h4 Car sharing
+			.col-sm-6.col-md-4
+				.thumbnail
+					a(href="/car2go")
+						.caption
+							p Car sharing
+						img(data-src="holder.js/300x200", class="img-responsive", alt="...")
+		.row
+			h4 Traffic conditions
+			.col-sm-6.col-md-4
+				.thumbnail
+					a(href="/traffic")
+						.caption
+							p Real-time traffic conditions on map
+						img(data-src="holder.js/300x200", class="img-responsive", alt="...")
+
+				
+
+	.footer
+		p ♥ from mushlab
+
+
+block scripts
+	<script src="js/index.js"></script>	
+

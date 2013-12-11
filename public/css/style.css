@@ -32,9 +32,9 @@ margin-top: 10px;
 	background: #fff url('../imgs/loader.gif') no-repeat center center;
 }
 
-.tooltip { display: none; position:relative; }
-.tooltip .bg { opacity: 0.5; }
-.tooltip text {
+.tooltip {  position:relative; }
+.tooltip .bg, .staticTooltip .bg { opacity: 0.2; }
+.tooltip text, .staticTooltip text {
 fill: white;
 font-size: 14px;
 }
@@ -97,8 +97,32 @@ position: absolute;
 top: inherit;
 bottom: 5px;
 }
-#controls select{ width: 100px;}
+#controls ted{ width: 100px;}
 #source{
 display: none;
 }
+}
+
+.thumbnail {
+	opacity: 0.5;
+	text-align: center;
+}
+.thumbnail:hover {
+	opacity: 1;
+}
+
+
+.thumbnail a {
+	display: inline-block;
+	text-align: center;
+	position: relative;
+}
+.thumbnail a .caption {
+	position: absolute;
+	background-color: rgba(255,255,255,0.5);
+	width: 100%;
+}
+.thumbnail a img {
+	text-align: center;
+	display: inline-block;
 }

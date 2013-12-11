@@ -1,0 +1,18 @@
+#map_item { 
+	height: 500px; 
+	width: 700px;
+}
+
+path {
+  stroke-width: 5px;
+  stroke: #19B8FF ;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+path.hover {
+  stroke-width: 10px;
+  stroke: #19B8FF;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}

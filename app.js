@@ -29,8 +29,13 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
+app.get('/explore', routes.explore);
+app.get('/about', routes.about);
 app.get('/multiple', routes.multiple);
 app.get('/single', routes.single);
+app.get('/highway', routes.highway);
+app.get('/car2go', routes.car2go);
+app.get('/traffic', routes.traffic);
 app.get('/users', user.list);
 
 http.createServer(app).listen(app.get('port'), function(){
