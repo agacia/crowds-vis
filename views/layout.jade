@@ -3,6 +3,8 @@ html
 	head
 		title= title
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+		<link href='http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" href="css/vendor/bootstrap.min.css">
 		link(rel='stylesheet', href='/css/style.css')
 		block styles
@@ -10,13 +12,19 @@ html
 		
 
 	body
-		.loader
+		.loader#loader1
+		.loader#loader2
 
 		block header
 
 		block content
 
+
+		div.message	
+		div.error	
+
 		<script src="js/vendor/d3.js" charset="utf-8"></script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.min.js"></script>
 		<script src="js/vendor/jquery.js"></script>
 		<script src="js/vendor/holder.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>

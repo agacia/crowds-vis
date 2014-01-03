@@ -3,13 +3,11 @@ extends layout
 block styles
 	link(rel='stylesheet', href='/css/single.css')
 
-block content			
+block content
 	span.algorithm Algorithm: 
 		select(class="algorithm-select")
-			option(value="SandSharc") Sand-Sharc 
-			option(value="MobileLeungSDSD") Mobile Leung
-			option(value="Leung") Leung
-			option(value="EpidemicCommunityAlgorithm") Epidemic
+			option(value="MobileLeung") Mobile Leung
+			option(value="MobileSandSharc") Mobile Sand Sharc
 
 	<a class="playbutton play icon">Pause / Play</a>
 	
@@ -27,7 +25,8 @@ block content
 			option(value="cos_score") Community score
 	
 	#container
+		
 
 block scripts
-	<script src="js/single.js"></script>
+	<script src="js/single-cross.js"></script>
 	<script src="js/vendor/fisheye.js"></script>

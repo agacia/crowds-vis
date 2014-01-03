@@ -4,8 +4,39 @@ block styles
 	link(rel='stylesheet', href='/css/highway.css')
 
 block content
-	.container
-		h2 Highway
+	span.algorithm Scenario: 
+		select(class="scenario-select")
+			option(value="Highway") Highway 
+			option(value="Split") Split 
+			option(value="Box") Box 
+			option(value="Cross") Cross 
+			
+	span.algorithm Algorithm: 
+		select(class="algorithm-select")
+			option(value="Crowdz") Crowdz
+			option(value="MobileSandSharc") Mobile Sand-Sharc 
+			option(value="SandSharc") Sand-Sharc 
+			option(value="MobileLeungSDSD") Mobile Leung
+			option(value="Leung") Leung
+			option(value="EpidemicCommunityAlgorithm") Epidemic
+
+	<a class="playbutton play icon">Pause / Play</a>
+	
+	span.player
+		<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+		<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+	
+	span Time:
+		span(class="slider")
+	
+	span Sort by: 
+		select(class="sort-by")
+			option(value="com_size") Community size 
+			option(value="degree") Degree 
+			option(value="cos_score") Community score
+	
+	#container
 
 block scripts
 	<script src="js/highway.js"></script>
+	<script src="js/vendor/fisheye.js"></script>

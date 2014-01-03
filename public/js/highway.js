@@ -3,21 +3,30 @@ window.onload = function() {
         , vis = d3.select('body #container').append('svg').attr('class', 'vis')
           .style({ width: width + 'px', height: height + 'px' })
         , node, max, margin = 10, max_area = 800, tooltip
+        , toolbar_height = 60
         , margin_top = (width > 450) ? 0 : 5
-        , margin_top = 0, margin_bottom = 0
+        , margin_top = 0, margin_bottom  = 0
+        , areaRatio = 1
         , steps_x = 100, steps_y = 28
-        , calcBestArea = function(){
+        , calcBestArea = function(areaRatio){
           var r1 = (width ) 
             , r2 = (height)
             , r = r1 > r2 ? r2 : r1
-            r *= 1.1
-            d3.select('body #container .vis').style({ width: r + 'px', height: r + 'px' })
-            return r
+            r *= 1
+            w = r1;
+            h = areaRatio * r1;
+            if (h > r2) {
+              w = r;
+              h = areaRatio * r;
+            }
+            // h += toolbar_height
+            d3.select('body #container .vis').style({ width: w + 'px', height: (h+toolbar_height) + 'px' })
+            return {"r":r, "width":w, "height":h}
         }
-        , max_area = calcBestArea()
+        , max_area = calcBestArea(areaRatio).r
         , areaScale = d3.scale.linear().range([0, max_area])
         , xScale = d3.scale.linear().range([margin, max_area - margin])
-        , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom])
+        , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom - margin_top])
         , maxY = 0
         , areaToRadius = function(area, scale){ return Math.sqrt( scale * area / Math.PI) }
         , fisheye = null
@@ -65,7 +74,7 @@ window.onload = function() {
         , filename ='groups_'
         , imgUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/algorithms/'
         , rootUrl = 'data/'
-        , scenario = "Luxembourg"
+        , scenario = $('.scenario-select').val()
         , slider = $( ".slider" ).slider({
             min: firstStep,
             max: lastStep,
@@ -113,24 +122,22 @@ window.onload = function() {
         lastStep = 600;
         stepSize = 2;
         timerDelay = 100;
-        margin_top = 0;
-        margin_bottom = 0;
-
+        margin = 10;
+        margin_top = 20;
+        margin_bottom = 20;
+        areaRatio = 1;
         if (scenario == "Highway" || scenario=="Split") {
-          margin_top = 100;
-          margin_bottom = 600;
+          areaRatio = 0.25;
         }
-        if (scenario == "Box" || scenario=="Cross") {
-          margin_top = 100;
-          margin_bottom = 100;
+        if (scenario == "Box" || scenario=="Cross" || scenario=="Manhattan") {
+          areaRatio = 1;
         }
         if (scenario == "Luxembourg") {
           firstStep = 0;
           lastStep = 1200;
           stepSize = 10;
           timerDelay = 300;
-          margin_top = -20;
-          margin_bottom = 0;
+          areaRatio = 0.85;
         }
         slider.slider({
             min: firstStep,
@@ -141,7 +148,7 @@ window.onload = function() {
               step = ui.value; 
               onStepUpdated()
             }});
-        updateMaxArea();
+        updateMaxArea(areaRatio);
         for (var i = firstStep; i < lastStep; i += stepSize) {
           var reqUrl = rootUrl + scenario + "/" + algorithm + "/groups/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
           // 'data/MobileLeung/communities.tsv'
@@ -398,7 +405,7 @@ window.onload = function() {
         // else margin_top = 120
         vis.style({ width: width + 'px', height: height + 'px' })
         node.call(updatePos)
-        updateMaxArea()
+        updateMaxArea(areaRatio)
         node.select('circle').attr('r', radius)
       })
       function tooltipEffect(vis) {
@@ -454,11 +461,17 @@ window.onload = function() {
           .call(setFisheyePos)
         })
       }
-      function updateMaxArea(){
-        max_area = calcBestArea()
-        areaScale.range([0, max_area])
-        xScale.range([margin, max_area - margin])
-        yScale.range([margin_top, max_area - margin_bottom])
+      function updateMaxArea(areaRatio){
+        area = calcBestArea(areaRatio)
+        max_area = area.r
+        areaScale.range([0, area.r])
+        // console.log("area", area)
+        xScale.range([margin, area.width - margin])
+        h = area.height - margin_bottom - margin_top - toolbar_height;
+        if (scenario == "Highway") {
+          h -= toolbar_height;
+        }
+        yScale.range([margin_top, h])
       }
       function updateTopNode(maxNode){
         if (!maxNode) return;

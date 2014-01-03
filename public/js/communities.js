@@ -2,15 +2,15 @@ window.onload = function() {
   var width = window.innerWidth, height = window .innerHeight
         , vis = d3.select('body #container').append('svg').attr('class', 'vis')
           .style({ width: width + 'px', height: height + 'px' })
-        , node, max, margin = 10, max_area = 800, tooltip
+        , node, max, margin = 0, max_area = 800, tooltip
         , margin_top = (width > 450) ? 0 : 5
-        , margin_top = 0, margin_bottom = 0
-        , steps_x = 100, steps_y = 28
+        , margin_top = -20
+        , margin_bottom = 0, steps_x = 100, steps_y = 28
         , calcBestArea = function(){
           var r1 = (width ) 
             , r2 = (height)
             , r = r1 > r2 ? r2 : r1
-            r *= 1.1
+            r *= 1.3
             d3.select('body #container .vis').style({ width: r + 'px', height: r + 'px' })
             return r
         }
@@ -26,7 +26,6 @@ window.onload = function() {
         , colorMetric = 'com_id'
         , sortMetric = $('.sort-by').val()
         , algorithm = $('.algorithm-select').val()
-        , firstStep = 0, step = 0, lastStep = 0, stepSize = 0
         , id = 0, order = 0
         , radius = function(d){ 
           var metric = sortMetric
@@ -47,7 +46,7 @@ window.onload = function() {
         , projection = d3.geo.albers()
         , money = d3.format('$,04d')   
         , format = function(d){ // when read cvs
-            // step  id x y degree  neighbors cc_id cc_size com_id  cos_score com_size
+            // step node_id x y degree  neighbors cc_id cc_size com_id  com_score com_size
             var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
             d.id = id++;
@@ -62,10 +61,10 @@ window.onload = function() {
             return d;
         }
         , topNode = null
+        , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
         , filename ='groups_'
         , imgUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/algorithms/'
-        , rootUrl = 'data/'
-        , scenario = "Luxembourg"
+        , rootUrl = 'data/20131215/'
         , slider = $( ".slider" ).slider({
             min: firstStep,
             max: lastStep,
@@ -85,6 +84,7 @@ window.onload = function() {
         , timerDelay = 300
         , trackedNode = 0
         , staticTooltip
+        , cf = null
 
       $(".slider").slider()
         .find(".ui-slider-handle")
@@ -93,9 +93,12 @@ window.onload = function() {
       if ( window.self !== window.top ){
         // we're in an iframe! oh no! hide the twitter follow button
       }
-      loadFiles(rootUrl, scenario, algorithm, filename);
+      // loadFiles(rootUrl, algorithm, filename);
       vis.call(createStaticTooltip);
       vis.call(createTooltip)   
+
+      filename = "communities.csv"
+      loadFile(rootUrl + algorithm + "/" + filename);
       
       function onStepUpdated() {
         showVehicles(vehicles[step])
@@ -103,131 +106,56 @@ window.onload = function() {
         updateStaticTooltip(step);
       }
 
-      function loadFiles(rootUrl, scenario, algorithm, baseFilename){
-        $('.loader').show()
-        vehicles = {};
-        dataLoaded = 0;
-        vis.selectAll('.node').remove()
-        step = 0
-        firstStep = 0;
-        lastStep = 600;
-        stepSize = 2;
-        timerDelay = 100;
-        margin_top = 0;
-        margin_bottom = 0;
-
-        if (scenario == "Highway" || scenario=="Split") {
-          margin_top = 100;
-          margin_bottom = 600;
-        }
-        if (scenario == "Box" || scenario=="Cross") {
-          margin_top = 100;
-          margin_bottom = 100;
-        }
-        if (scenario == "Luxembourg") {
-          firstStep = 0;
-          lastStep = 1200;
-          stepSize = 10;
-          timerDelay = 300;
-          margin_top = -20;
-          margin_bottom = 0;
-        }
-        slider.slider({
-            min: firstStep,
-            max: lastStep,
-            step: stepSize,
-            value: firstStep,
-            slide: function( event, ui ) { 
-              step = ui.value; 
-              onStepUpdated()
-            }});
-        updateMaxArea();
-        for (var i = firstStep; i < lastStep; i += stepSize) {
-          var reqUrl = rootUrl + scenario + "/" + algorithm + "/groups/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
-          // 'data/MobileLeung/communities.tsv'
-          d3.tsv(reqUrl, formatGroup, function(err, rows){
-            dataLoaded += 1
-            if (dataLoaded == lastStep/stepSize) {
-              $('.loader').hide()
-            }
-            if(err) {
-              $('.error').html("No data for " + scenario + " with algorithm " + algorithm);
-              // throw err
-            }
-            else {
-              if (rows.length > 0) {
-                var stepId = rows[0].step
-                vehicles[stepId] = rows
-              }
-              gotVehicles(stepId);
-            }
-          })
-        }
-      }
-
       function loadFile(url) {
         $('.loader').show()
-        d3.tsv(url, format, function(err, rows){
-          if(err) {
-            $('.error').html("No data for " + scenario + " with algorithm " + algorithm);
-          }
-          else {
-            $('.error').html("");
-            // get only for a single step at once
-            for (var i = firstStep; i < lastStep; i += stepSize) {
-              vehicles[step] = $.grep(vehicles, function(el, i) { return el.step === step });
-            }
-            updateXScale("x");
-            updateYScale("y");
-            step = firstStep;
-            showVehicles(vehicles[step])
-          }
+        d3.tsv(url, format, function(err, data){
+          if(err) throw err
+          gotData(data)
         })
       }
-      function gotVehicles(){
-        if (dataLoaded == lastStep/stepSize) {
-          $('.error').html("");
-          updateXScale("x");
-          updateYScale("y");
-          step = firstStep;
-          showVehicles(vehicles[step])
-          // fisheyeEffect(vis)
-        }
+      function gotData(data){
+        $('.loader').hide()
+        console.log("got data", data.length);
+        cf = crossfilter(data);
+        // if (dataLoaded == lastStep/stepSize) {
+        //   updateXScale("x");
+        //   updateYScale("y");
+        //   step = firstStep;
+        //   showVehicles(vehicles[step])
+        //   // fisheyeEffect(vis)
+        // }
       }
       function showVehicles(vehicles) { 
-        // console.log("showing step ", step, vehicles)  
-        updateAreaScale(sortMetric)
-        var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
-        // console.log("step", step, " exit nodes ", exitNodes)
-        exitNodes
-          // .transition().duration(900).style("opacity",0)
-          .remove();
-        node = vis.selectAll('.node').data(vehicles)
-          .enter()
-            .append('g')
-            .attr('class', 'node')  
-        // console.log("step", step, " nodes ", node)
-        node.on('click', function(){
-          var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
-            , sel = d3.select(this)
+        // updateAreaScale(sortMetric)
+        // var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
+        // // console.log("step", step, " exit nodes ", exitNodes)
+        // exitNodes
+        //   // .transition().duration(900).style("opacity",0)
+        //   .remove();
+        // node = vis.selectAll('.node').data(vehicles)
+        //   .enter()
+        //     .append('g')
+        //     .attr('class', 'node')  
+        // // console.log("step", step, " nodes ", node)
+        // node.on('click', function(){
+        //   var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
+        //     , sel = d3.select(this)
           
-          if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
-          var startTracking = d3.select(this).classed('selected')
-          if (startTracking) {
-            d3.select('.staticTooltip').style('display', 'block')
-            trackedNode = sel
-            updateStaticTooltip(step);
-          }
-          else {
-            trackedNode = 0
-            d3.select('.staticTooltip').style('display', 'none')
-          }
-        })
-        node.append('circle')
-          .call(updateColor)
-        node.call(updatePos) 
-          // .call(tooltipEffect);
-        fisheyeEffect(vis)
+        //   if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
+        //   var startTracking = d3.select(this).classed('selected')
+        //   if (startTracking) {
+        //     trackedNode = sel
+        //     updateStaticTooltip(step);
+        //   }
+        //   else {
+        //     trackedNode = 0
+        //   }
+        // })
+        // node.append('circle')
+        //   .call(updateColor)
+        // node.call(updatePos) 
+        //   // .call(tooltipEffect);
+        // fisheyeEffect(vis)
       }
       
       function updateXScale(metric) {
@@ -269,7 +197,7 @@ window.onload = function() {
       }
       function createStaticTooltip(vis){
         // d3.select('.staticTooltip').remove();
-        // console.log("pos", max_area)
+        console.log("pos", max_area)
         staticTooltip = vis.append('g').attr('class', 'staticTooltip')
             .attr('x',0)
             .attr('y',0)   
@@ -285,9 +213,10 @@ window.onload = function() {
         return staticTooltip
       }
       function updateStaticTooltip(step) {
-        if (trackedNode && trackedNode.data() && trackedNode.data().length > 0) {
+        if (trackedNode) {
           // find node's data for the current step
           trackedNode = vis.selectAll('.node').filter(function(d, i) { return d['id']==trackedNode.data()[0]['id']  ? d : null });
+          // console.log("trackedNode", trackedNode)
           trackedNode.classed('selected',true)
           d = trackedNode.data()[0];
           if (d) {
@@ -383,23 +312,19 @@ window.onload = function() {
         var newAlgorithm = $(this).val()
         if (algorithm === newAlgorithm) return
         algorithm = newAlgorithm
-        loadFiles(rootUrl, scenario, algorithm, filename);
-      })
-      $('.scenario-select').on('change', function(){
-        var newScenario = $(this).val()
-        if (scenario === newScenario) return
-        scenario = newScenario
-        loadFiles(rootUrl, scenario, algorithm, filename);
+        loadFiles(rootUrl, algorithm, filename);
       })
       $(window).resize(function(){
         width = window.innerWidth
         height = window.innerHeight
-        // if(width < 450) margin_top = 20
-        // else margin_top = 120
+        if(width < 450) margin_top = 20
+        else margin_top = 120
         vis.style({ width: width + 'px', height: height + 'px' })
         node.call(updatePos)
         updateMaxArea()
         node.select('circle').attr('r', radius)
+        xScale.range([margin, max_area - margin])
+        yScale.range([margin_top, max_area - margin_bottom])
       })
       function tooltipEffect(vis) {
         return vis.on('mouseover', function(d) {
@@ -457,8 +382,6 @@ window.onload = function() {
       function updateMaxArea(){
         max_area = calcBestArea()
         areaScale.range([0, max_area])
-        xScale.range([margin, max_area - margin])
-        yScale.range([margin_top, max_area - margin_bottom])
       }
       function updateTopNode(maxNode){
         if (!maxNode) return;

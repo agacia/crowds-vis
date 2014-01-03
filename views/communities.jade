@@ -1,14 +1,15 @@
 extends layout
 
 block styles
-	link(rel='stylesheet', href='/css/single.css')
+	link(rel='stylesheet', href='/css/communities.css')
 
-block content			
+block content
 	span.algorithm Algorithm: 
 		select(class="algorithm-select")
-			option(value="SandSharc") Sand-Sharc 
-			option(value="MobileLeungSDSD") Mobile Leung
 			option(value="Leung") Leung
+			option(value="MobileLeungSDSD") Mobile Leung (SDSD) 
+			option(value="MobileLeungDSD") Mobile Leung (DSD)
+			option(value="SandSharc") Sand-Sharc 
 			option(value="EpidemicCommunityAlgorithm") Epidemic
 
 	<a class="playbutton play icon">Pause / Play</a>
@@ -27,7 +28,10 @@ block content
 			option(value="cos_score") Community score
 	
 	#container
+		
 
 block scripts
-	<script src="js/single.js"></script>
+	<script src="js/communities.js"></script>
 	<script src="js/vendor/fisheye.js"></script>
+	<script src="js/vendor/crossfilter.min.js"></script>
+	<script src="js/vendor/dc.js"></script>

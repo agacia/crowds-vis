@@ -1,0 +1,56 @@
+extends layout
+
+block styles
+	link(rel='stylesheet', href='/css/congestion.css')
+
+block content
+	#staticTooltip	
+
+	.container
+		.col-xs-12.col-sm-6.vis-column
+			.row
+				span.algorithm.col-xs-12.col-sm-6 Algorithm: 
+					select(class="algorithm-select")
+						option(value="MobileSandSharc") Mobile Sand Sharc
+				span.col-xs-12.col-sm-6
+					<a class="playbutton play icon">Pause / Play</a>
+					span.player
+						<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+						<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+				
+					span.slider
+			.row
+				span.col-xs-12.col-sm-6 Color by: 
+					select(class="color-by")
+						option(value="com_id") Community id
+						option(value="speed") Speed 
+						option(value="num_stops") Number of stops
+				
+				span.col-xs-12.col-sm-6 Size by: 
+					select(class="sort-by")
+						option(value="com_size") Community size 
+						option(value="degree") Degree 
+						option(value="cos_score") Community score
+			
+			.row
+				#visualisation
+
+		.col-xs-12.col-sm-6
+			h4 Statistics
+			#stats
+			.data-status Downloading data...
+			.chart#hist-vehicles
+			h4 Time series
+			#charts
+				.charts-status Drawing charts...
+				.chart#num-vehicles
+				.chart#num-stops
+	
+	
+	
+
+block scripts
+	<script src="js/congestion.js"></script>
+	<script src="js/vendor/fisheye.js"></script>
+	<script src="js/vendor/crossfilter.min.js"></script>
+	<script src="js/vendor/dc.js"></script>
