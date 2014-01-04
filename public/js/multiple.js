@@ -13,14 +13,15 @@ window.onload = function() {
           'avg_clustering_coefficient', 'cc_count', 'avg_cc_size', 'max_cc_size', 'max_cc_id', 'cc_std_dev']
     , algorithmMetrics = ['com_count', 'avg_com_size', 'max_com_size', 'max_com_id', 'com_modularity']
     , firstStep = 0, lastStep = 1200, step = 0, stepSize = 10
-    , imgWidth = 600
-    , imgHeight = 600
-    , chartHeight = 200
+    , imgWidth = 400
+    , imgHeight = 400
+    , chartHeight = 120
     , filebase ='img_'
     , fileext = ".jpg"
-    , rootUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/algorithms/'
-    , graphRootUrl = 'data/algorithms/'
-    , algorithms = ['MobileLeungSDSD', 'SandSharc', 'EpidemicCommunityAlgorithm', 'Leung', 'MobileLeungDSD']
+    // , rootUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/Luxembourg/'
+    , rootUrl = 'data/Luxembourg/'
+    , graphRootUrl = 'data/Luxembourg/'
+    , algorithms = ['MobileLeungSDSD', 'Leung', 'EpidemicCommunityAlgorithm']
     , downloadedCount = 0
     , slider = $( ".slider" ).slider({
         min: firstStep,
@@ -108,7 +109,6 @@ window.onload = function() {
 
     var loadedImgs = 0;
     var totalImgs = algorithms.length * lastStep / stepSize;
-    console.log("otal", totalImgs)
     $.each(algorithms, function(algorithm) {
       var algorithmName = algorithms[algorithm]
       d3.select('.algorithm.'+algorithmName)
@@ -124,7 +124,6 @@ window.onload = function() {
           loadedImgs += 1
           // console.log("loaded", loadedImgs)   
           if (loadedImgs == totalImgs) {
-            console.log("loaded")
             $(".loader").hide()
           }
         })
@@ -137,7 +136,6 @@ window.onload = function() {
     });
 
     $(document).ready(function(){
-      console.log("document ready")
     });
 
     algorithm.append('div')

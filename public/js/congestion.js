@@ -63,10 +63,10 @@ window.onload = function() {
         , money = d3.format('$,04d')   
         , format = function(d){ // when read cvs
             // step  id x y degree  neighbors cc_id cc_size com_id  cos_score com_size
-            var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
+            var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
-            d.id = id++;
-            d.order = order++;
+            d.id = d.node_id;
+            //d.order = order++;
             return d;
         }
         , formatGroup = function(d){ // when read cvs
@@ -110,7 +110,7 @@ window.onload = function() {
         // we're in an iframe! oh no! hide the twitter follow button
       }
 
-      loadFiles(rootUrl, scenario, algorithm, filename);
+      // loadFiles(rootUrl, scenario, algorithm, filename);
       loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv");
      
       vis.call(createStaticTooltip);
@@ -193,9 +193,13 @@ window.onload = function() {
           else {
             $('#loader2').hide();
             $('.error').html("");
+            vehicles = {}
+            vis.selectAll('.node').remove()
+            setScenario(scenario);
             d3.select(".data-status").html("Analysing " + data.length + " rows of data...")
             // console.log("loaded ", url, data)
             var cf = crossfilter(data);
+
             drawVehicleCharts(cf);
             d3.select(".charts-status").html("Drawing time series...")
             drawTimeseriesCharts(cf);
@@ -209,35 +213,33 @@ window.onload = function() {
           return +d.node_id;
         })
         var vehicleGroup = vehicleDimension.group().reduceCount();
-        var vehicles = vehicleGroup.all();
+        var groups = vehicleGroup.all();
         var sum = 0;
-        for (var vehicle in vehicles) {
-          sum += vehicles[vehicle].value
+        for (var vehicle in groups) {
+          sum += groups[vehicle].value
         }
-        var average = (sum / vehicles.length).toFixed(2);
+        var average = (sum / groups.length).toFixed(2);
         var stdDeviation = 0
-        for (var vehicle in vehicles) {
-          deviation = Math.pow(vehicles[vehicle].value - average, 2)
+        for (var vehicle in groups) {
+          deviation = Math.pow(groups[vehicle].value - average, 2)
           stdDeviation += deviation;
         }
-        stdDeviation = Math.sqrt(stdDeviation / vehicles.length).toFixed(2)
+        stdDeviation = Math.sqrt(stdDeviation / groups.length).toFixed(2)
         // vehicleGroup.all().reduce(function(previousValue, currentValue) { return previousValue.sum + previousValue. });
         // console.log("vehicleGroup", vehicleGroup.all(), "sum", sum, "avg", average)
-        d3.select("#stats").append("div").html("Total number of vehicles: " + vehicles.length);
+        d3.select("#stats").append("div").html("Total number of vehicles: " + groups.length);
         d3.select("#stats").append("div").html("Average seconds traveled: " + average);
         d3.select("#stats").append("div").html("Standard deviation: " + stdDeviation);
         d3.select("#stats").append("div").html("Total seconds traveled: " + sum);
 
-        var cf2 = crossfilter(vehicles)
+        var cf2 = crossfilter(groups)
         var hist = cf2.dimension(function(d) { return d.value})
         var count = hist.group();
 
-        // console.log("count ", count.all())
         var numBins = 30;
         var binWidth = (count.all().length) / numBins;
         // console.log("binWidth", binWidth)
         var count = hist.group(function(d) {return Math.floor(d / binWidth) * binWidth;});
-        console.log("count ", count.all())
         drawHistogram("#hist-vehicles", "Trip duration", "Number of vehicles", hist, count, numBins, binWidth)
             
         d3.select(".data-status").style("display", "none")
@@ -248,6 +250,7 @@ window.onload = function() {
               d.num_stops = +d.num_stops;
               return +d.step;
             })
+
             var metric = "num_stops";
             var groupSize = 1;
             // function(step) { return Math.floor(step / 10); }
@@ -277,25 +280,29 @@ window.onload = function() {
               }
             )
 
+            var steps = timeGroup.all();
+            for (var step in steps) {
+              vehicles[step] = timeDimension.filter(step).top(Infinity)
+            }
+            timeDimension.filter(null);
+
+            updateXScale("x");
+            updateYScale("y");
+            step = firstStep;
+            showVehicles(vehicles[step])
+
             drawChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", groupSize)
             drawChart("#num-stops", "Step", "Number of congestion reports", timeDimension, timeGroup, "step", "stops_count", groupSize)
             
       }
       function drawHistogram(selection, xLabel, yLabel, dimension, group, nBins, binWidth) {
-        
-        // var xMax = dimension.bottom(1)[0].key
-        // var xMin = dimension.top(1)[0].key;
         counts = group.all();
         var xMin = counts[0].key
         var xMax = counts[counts.length-1].key;
-        // var xMin = 0;
-        // var xMax = nBins;
         var chart = dc.barChart(selection);
         chart
-          // .width(580)
           .height(160)
           .x(d3.scale.linear().domain([xMin,xMax]))
-          // .interpolate('step-before')
           .title(function(p) {
               return 
                   "Number of vehicles: " + numberFormat(p.value) + "\n"
@@ -344,7 +351,6 @@ window.onload = function() {
       function drawChart(selection, xLabel, yLabel, dimension, group, keyAccessor, valueAccessor, groupSize) {
         var xMin = dimension.bottom(1)[0][keyAccessor]
         var xMax = dimension.top(1)[0][keyAccessor];
-            
         var chart = dc.lineChart(selection);
         chart
           // .width(580)
@@ -401,20 +407,16 @@ window.onload = function() {
         }
       }
       function showVehicles(vehicles) { 
-        // console.log("showing step ", step, vehicles)  
         updateAreaScale(sortMetric)
         var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
-        // console.log("step", step, " exit nodes ", exitNodes)
         exitNodes
           // .transition().duration(900).style("opacity",0)
           .remove();
-        node = vis.selectAll('.node').data(vehicles)
+        newNodes = vis.selectAll('.node').data(vehicles, dataKey)
           .enter()
             .append('g')
             .attr('class', 'node')  
-        // console.log("step", step, " nodes ", node)
-        node.on('click', function(){
-          console.log("node clicked")
+        newNodes.on('click', function(){
           var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
             , sel = d3.select(this)
           
@@ -430,9 +432,14 @@ window.onload = function() {
             d3.select('.staticTooltip').style('display', 'none')
           }
         })
-        node.append('circle')
+        newNodes.append('circle')
+          
+        
+        node = vis.selectAll('.node')
+        console.log("nodes", node)
+        node
+          .call(updatePos) 
           .call(updateColor)
-        node.call(updatePos) 
           // .call(tooltipEffect);
         fisheyeEffect(vis)
       }
@@ -484,7 +491,6 @@ window.onload = function() {
       }
       function createStaticTooltip(vis){
         // d3.select('.staticTooltip').remove();
-        // console.log("pos", max_area)
         staticTooltip = d3.select("#staticTooltip").append('svg').append('g').attr('class', 'staticTooltip')
             .attr('x',0)
             .attr('y',0)   
@@ -511,14 +517,14 @@ window.onload = function() {
           d = trackedNode.data()[0];
           if (d) {
             staticTooltip.select('rect').transition().attr({ width: 250, height: 300, rx: 5, ry: 5, class: 'bg' })
-            staticTooltip.select('.main').text("Tracked vehicle:")
-            staticTooltip.select('.id').text('Vehicle: ' + d.id)
+            staticTooltip.select('.main').text("Step: " + d.step)
+            staticTooltip.select('.id').text('Vehicle: ' + d.node_id)
             staticTooltip.select('.degree').text('Degree: ' + d.degree)
             staticTooltip.select('.com_id').text('Com_id: ' + d.com_id)
             staticTooltip.select('.com_size').text('Com size: ' + d.com_size)
             staticTooltip.select('.position').text('x: ' + parseFloat(d.x).toFixed(2) + ", y: " + parseFloat(d.y).toFixed(2))
             staticTooltip.select('.speed').text('Speed: ' + parseFloat(d.speed).toFixed(2))
-            staticTooltip.select('.link').text('Link: ' + "NA")
+            staticTooltip.select('.link').text('Link: ' + d.link_id)
             staticTooltip.select('.num_stops').text('Number of stops on link: ' + d.num_stops)
           }
         }
@@ -560,9 +566,25 @@ window.onload = function() {
       }
       function updateColor(node){
         node.style('fill', function(d) { 
+          return colorScales["com_id"](d["com_id"]) 
+          // return colorScales[colorMetric](d[colorMetric]) 
+        })
+        node.style('stroke', function(d) { 
           return colorScales[colorMetric](d[colorMetric]) 
         })
-        node.style("fill-opacity", .8)
+        node.style("fill-opacity", function(d) { 
+          if (colorMetric == "num_stops" && d[colorMetric] >= 2) {
+            return 1
+          }
+          return 0.8
+        })
+        node.style("stoke-opacity", 1);
+        node.style('stroke-width', function(d) { 
+          if (colorMetric == "num_stops" && d[colorMetric] >= 2) {
+            return 5;
+          }
+          return 2;
+        })
       }
       function setFisheyePos(node){
         if (node && node.select('circle') && node.select('circle').length > 0) {
@@ -604,8 +626,9 @@ window.onload = function() {
       })
       $('.color-by').on('change', function(){
         var newMetric = $(this).val()
-        if (sortMetric === newMetric) return
-        colorMetric = newMetric
+        if (colorMetric === newMetric) return
+        colorMetric = newMetric 
+        console.log("colorMetric", colorMetric)
         updateColorScale(colorMetric)
         node.transition().duration(1000).call(updateColor)
       })

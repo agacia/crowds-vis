@@ -15,10 +15,8 @@
 }
 
 .algorithm .image {
-  margin-top: -10px;
-  margin-left: -10px;
-  margin-right: -10px;
-  margin-bottom: -90px;
+  margin: -10px -10px -50px -10px;
+  width: 400px;
 }
 
 .algorithm-metrics {
