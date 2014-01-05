@@ -156,7 +156,7 @@ window.onload = function() {
         updateMaxArea(areaRatio);
       }
       function loadFiles(rootUrl, scenario, algorithm, baseFilename){
-        $('#loader1').show()
+        $('.loader').show()
         vehicles = {};
         dataLoaded = 0;
         vis.selectAll('.node').remove()
@@ -167,7 +167,7 @@ window.onload = function() {
           d3.tsv(reqUrl, formatGroup, function(err, rows){
             dataLoaded += 1
             if (dataLoaded == lastStep/stepSize) {
-              $('#loader1').hide()
+              $('.loader').hide()
             }
             if(err) {
               $('.error').html("No data for " + scenario + " with algorithm " + algorithm);
@@ -185,13 +185,13 @@ window.onload = function() {
       }
 
       function loadFile(url) {
-        $('#loader2').show()
+        $('.loader').show()
         d3.tsv(url, format, function(err, data){
           if(err) {
             $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
           }
           else {
-            $('#loader2').hide();
+            $('.loader').hide();
             $('.error').html("");
             vehicles = {}
             vis.selectAll('.node').remove()
