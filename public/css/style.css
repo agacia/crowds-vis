@@ -1,8 +1,9 @@
 body { 
 margin: 0; 
-padding: 10px;
+padding: 0px;
 font-family: 'Droid Sans', sans-serif;
 overflow: scroll;
+color: #304059;
 }
 
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
@@ -14,14 +15,37 @@ line-height: 1.1;
 button, select { outline: none;}
 
 a {
-color: #00B7FF;
+color: #45A697;
 }
+
+
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a {
+color: #45A697;
+}
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
+color: #fff;
+background-color: #45A697;
+}
+
+
 
 select{ margin: 0 10px; }
 
+.header {
 
-#navbar {
-margin-top: 10px;
+}
+
+.header h3 {
+	margin: 0;
+	padding: 10px;
+	color: #45A697;
+}
+
+.footer {
+	text-align: right;
+	padding: 10px 20px;
+	font-size: 11px;
+	color: #908785;
 }
 
 .loader {

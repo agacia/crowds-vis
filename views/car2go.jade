@@ -4,8 +4,37 @@ block styles
 	link(rel='stylesheet', href='/css/carsharing.css')
 
 block content
+	#staticTooltip	
+
 	.container
-		h2 Car sharing vis
+
+		h3 Visualisation of <a href="https://www.car2go.com/en/miami/">Car2Go Miami trips</a> set
+        
+		#cubs
+			#demo
+
+		.row
+			#trips-length-chart
+				h4 Lenght of trips
+				a(class="reset", href="javascript:charts['tripsLength'].filterAll();dc.redrawAll();", style="display: none;") reset
+				.clearfix
+			#visualisation
+
+
+		///.row
+///			span.col-xs-12.col-sm-6
+///				<a class="playbutton play icon">Pause / Play</a>
+///				span.player
+///					<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+///					<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+///				span.slider
+		
+		
+
 
 block scripts
 	<script src="js/carsharing.js"></script>
+	<script src="js/vendor/fisheye.js"></script>
+	<script src="js/vendor/crossfilter.min.js"></script>
+	<script src="js/vendor/dc.js"></script>
+	<script src="js/vendor/cubism.v1.min.js"></script>
