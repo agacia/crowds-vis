@@ -99,13 +99,13 @@ window.onload = function() {
       }
       function cubs(data) {
       	context = cubism.context()
-                    .step(6e5) // Distance between data points in milliseconds
+                    .step(6e4) // Distance between data points in milliseconds
                     .size(1000) // Number of data points
                     .stop();   // Fetching from a static data source; don't update values
 
         d3.select("#cubs").append("div") // Add a vertical rule
               .attr("class", "rule")        // to the graph
-              .call(context.rule());
+              .call(context.rule())
 
 
         draw_graph(["Miami-Trips-JuneJuly2013"]);
@@ -123,7 +123,9 @@ window.onload = function() {
 		        	// Creates an array of the data values
 		        	values = [];
 		            data.forEach(function(d) {
-		                values.push(d.tripDuration);
+		            	if (d.tripDuration > 0 && d.tripDuration < 600) {
+			                values.push(d.tripDuration);
+			            }
 		            }); 
 		        	callback(null, values); 
 		        }
