@@ -2,9 +2,6 @@ window.onload = function() {
   var 
         width = parseInt(d3.select(".vis-column").style("width")),
         height = areaRatio * width
-        // , height = parseInt(d3.select("#visualisation").style("height"))
-        // width = window.innerWidth
-        // , height = window .innerHeight
         , vis = d3.select('body #visualisation').append('svg').attr('class', 'vis')
           .style({ width: '100%', height: height + 'px' })
         , node, max, margin = 0, max_area = 800, tooltip
@@ -22,7 +19,6 @@ window.onload = function() {
               h = areaRatio * r;
             }
             d3.select('.vis').style({ width: w+ 'px', height: h+ 'px'})
-            // d3.select('.vis').style({ width: w + 'px', height: (h+toolbar_height) + 'px' })
             return {"r":r, "width":w, "height":h}
         }
         , max_area = calcBestArea(areaRatio).r
@@ -36,7 +32,7 @@ window.onload = function() {
         , colorScales = {
           "com_id": d3.scale.category20(),
           "speed": d3.scale.linear().range(["red","green"]),
-          "num_stops": d3.scale.linear().range(["green","red"])}
+          "num_stops": d3.scale.linear().range(["green","#FF530D"])}
         , colorMetric = 'com_id'
         , sortMetric = $('.sort-by').val()
         , colorMetric = $('.color-by').val()
@@ -55,156 +51,138 @@ window.onload = function() {
             return areaToRadius(areaScale(d[metric]), scale) 
           }
         , dataKey = function(d){ return d.node_id }
-        , sortBy = function(by){ return function(a, b){ 
-            if(a[by] === b[by]) return 0; else if(a[by] > b[by]) return -1;
-            return 1;
-        }}
-        , projection = d3.geo.albers()
-        , money = d3.format('$,04d')   
-        , format = function(d){ // when read cvs
-            // step  id x y degree  neighbors cc_id cc_size com_id  cos_score com_size
+        , format = function(d) { // when read cvs
             var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
             d.id = d.node_id;
-            //d.order = order++;
             return d;
         }
         , formatGroup = function(d){ // when read cvs
-            // step id  x y degree  com_id  cos_score com_size  cc_size metadata  color
             var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
             d.order = order++;
             return d;
         }
         , topNode = null
-        , filename ='groups_'
-        , imgUrl = 'http://vehilux.gforge.uni.lu/files/crowds-images/algorithms/'
         , rootUrl = 'data/'
-        // , scenario = $('.scenario-select').val()
         , scenario = "Manhattan"
-        , slider = $( ".slider" ).slider({
-            min: firstStep,
-            max: lastStep,
-            step: stepSize,
-            value: firstStep,
-            slide: function( event, ui ) { 
-              step = ui.value; 
-              onStepUpdated()
-            }
-          })
+        , slider
         , dateLabel = $("<div/>")
                     .css({ position : 'absolute' , top : 0, left : 0 })
                     .text(step)
         , vehicles = {}
-        , dataLoaded = 0
         , timer
         , timerDelay = 300
         , trackedNode = 0
-        , staticTooltip
-
-      $(".slider").slider()
-        .find(".ui-slider-handle")
-        .append(dateLabel)
+        , trackedCommunityId = 0
+        , staticTooltips = {}
+        , monsters = {}
 
       if ( window.self !== window.top ){
-        // we're in an iframe! oh no! hide the twitter follow button
+        // we're in an iframe!
       }
 
-      // loadFiles(rootUrl, scenario, algorithm, filename);
       loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv");
-     
-      vis.call(createStaticTooltip);
-      vis.call(createTooltip)   
-      
-      function onStepUpdated() {
-        showVehicles(vehicles[step])
-        dateLabel.text(step)        
-        updateStaticTooltip(step);
-      }
-      function setScenario(scenario) {
-        step = 0
-        firstStep = 0;
-        lastStep = 600;
-        stepSize = 2;
-        timerDelay = 100;
-        margin = 10;
-        margin_top = 20;
-        margin_bottom = 20;
-        areaRatio = 1;
-        if (scenario == "Highway" || scenario=="Split") {
-          areaRatio = 0.25;
-        }
-        if (scenario == "Box" || scenario=="Cross" || scenario=="Manhattan") {
-          areaRatio = 1;
-        }
-        if (scenario == "Luxembourg") {
-          firstStep = 0;
-          lastStep = 1200;
-          stepSize = 10;
-          timerDelay = 300;
-          areaRatio = 0.85;
-        }
-        slider.slider({
-            min: firstStep,
-            max: lastStep,
-            step: stepSize,
-            value: firstStep,
-            slide: function( event, ui ) { 
-              step = ui.value; 
-              onStepUpdated()
-            }});
-        updateMaxArea(areaRatio);
-      }
-      function loadFiles(rootUrl, scenario, algorithm, baseFilename){
-        $('.loader').show()
-        vehicles = {};
-        dataLoaded = 0;
-        vis.selectAll('.node').remove()
-        setScenario(scenario);
-        for (var i = firstStep; i < lastStep; i += stepSize) {
-          var reqUrl = rootUrl + scenario + "/" + algorithm + "/groups/" + baseFilename + ("0000" + i).slice(-4) + ".tsv"
-          // 'data/MobileLeung/communities.tsv'
-          d3.tsv(reqUrl, formatGroup, function(err, rows){
-            dataLoaded += 1
-            if (dataLoaded == lastStep/stepSize) {
-              $('.loader').hide()
-            }
-            if(err) {
-              $('.error').html("No data for " + scenario + " with algorithm " + algorithm);
-              // throw err
-            }
-            else {
-              if (rows.length > 0) {
-                var stepId = rows[0].step
-                vehicles[stepId] = rows
-              }
-              gotVehicles(stepId);
-            }
-          })
-        }
-      }
+      createstaticTooltips(); 
 
       function loadFile(url) {
         $('.loader').show()
-        d3.tsv(url, format, function(err, data){
-          if(err) {
-            $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
-          }
-          else {
+        var xhr = d3.tsv(url)
+          .row(format)
+          .on("progress", function(pe) { 
+            if(pe) {
+              d3.select('.progress-bar').attr('max', d3.event.total);
+              d3.select('.progress-bar').attr('value', d3.event.loaded);
+            }
+          })
+          .on("load", function(data) { 
             $('.loader').hide();
             $('.error').html("");
             vehicles = {}
             vis.selectAll('.node').remove()
-            setScenario(scenario);
-            d3.select(".data-status").html("Analysing " + data.length + " rows of data...")
-            // console.log("loaded ", url, data)
-            var cf = crossfilter(data);
-
-            drawVehicleCharts(cf);
-            d3.select(".charts-status").html("Drawing time series...")
-            drawTimeseriesCharts(cf);
-          }
+            timerDelay = 100;
+            areaRatio = 1;
+            d3.select(".data-status").html("Loaded " + data.length + " rows of data...")
+            // console.log("loaded data", data)
+            gotData(data)
+          })
+          .on("error", function(error) { 
+            $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
+          })
+          .get();
+      }
+      function gotData(data) {
+        var cf = crossfilter(data);
+        // time dimension
+        var timeDimension = cf.dimension(function(d) {
+          d.speed = +d.speed;
+          d.num_stops = +d.num_stops;
+          return +d.step;
         })
+        var metric = "num_stops";
+        // function(step) { return Math.floor(step / 10); }
+        var timeGroup = timeDimension.group().reduce(
+          function(p,v) { // add
+            ++p.count;
+            if (v.num_stops > 1) { ++p.stops_count }
+            p.speed_sum += v.speed
+            p.speed_avg = p.speed_sum / p.count;
+            return p;
+          },
+          function(p,v) { // remove
+            --p.count;
+            if (v[metric] > 0) { --p.stops_count }
+            p.speed_sum -= v.speed_sum;
+            p.speed_avg = p.speed_sum / p.count;
+            return p;
+          },
+          function() { // init
+            return { count: 0, speed_sum: 0, speed_avg: 0, stops_count: 0 };
+          }
+        );
+
+        var steps = timeGroup.all();
+        if (steps.length > 0) {
+          firstStep = steps[0].key;
+          lastStep = steps[steps.length-1].key;
+          step = firstStep;
+        }
+        stepSize = 1;
+        initialiseSlider(firstStep, lastStep, stepSize, onStepUpdated)
+        for (var i in steps) {
+          vehicles[i] = timeDimension.filter(i).top(Infinity)
+        }
+        timeDimension.filter(null);
+        updateMaxArea(areaRatio);
+        updateXScale("x");
+        updateYScale("y");
+        showVehicles(vehicles[step])
+        createMonsters();
+
+        createChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", firstStep, lastStep)
+        createChart("#num-stops", "Step", "Number of congestion reports", timeDimension, timeGroup, "step", "stops_count", firstStep, lastStep)
+           
+      }
+      function initialiseSlider(firstStep, lastStep, stepSize, callback) {
+        $(".slider").slider()
+          .find(".ui-slider-handle")
+          .append(dateLabel)
+         slider = $( ".slider" ).slider({
+              min: firstStep,
+              max: lastStep,
+              step: stepSize,
+              value: firstStep,
+              slide: function( event, ui ) { 
+                step = ui.value; 
+                callback()
+              }
+            })
+      }
+      function onStepUpdated() {
+        showVehicles(vehicles[step])
+        dateLabel.text(step)        
+        updatestaticTooltips(step);
+        createMonsters();
       }
       function drawVehicleCharts(cf) {
         var vehicleDimension = cf.dimension(function(d) {
@@ -244,57 +222,6 @@ window.onload = function() {
             
         d3.select(".data-status").style("display", "none")
       } 
-      function drawTimeseriesCharts(cf) {
-            var timeDimension = cf.dimension(function(d) {
-              d.speed = +d.speed;
-              d.num_stops = +d.num_stops;
-              return +d.step;
-            })
-
-            var metric = "num_stops";
-            var groupSize = 1;
-            // function(step) { return Math.floor(step / 10); }
-            // var timeGroup = timeDimension.group(function(step) { return Math.floor(step / groupSize); }).reduce(
-            var timeGroup = timeDimension.group().reduce(
-              function(p,v) { // add
-                ++p.count;
-                if (v.num_stops > 1) {
-                  ++p.stops_count
-                }
-                p.speed_sum += v.speed
-                p.speed_avg = p.speed_sum / p.count;
-            
-                return p;
-              },
-              function(p,v) { // remove
-                --p.count;
-                if (v[metric] > 0) {
-                  --p.stops_count
-                }
-                p.speed_sum -= v.speed_sum;
-                p.speed_avg = p.speed_sum / p.count;
-                return p;
-              },
-              function() { // init
-                return { count: 0, speed_sum: 0, speed_avg: 0, stops_count: 0 };
-              }
-            )
-
-            var steps = timeGroup.all();
-            for (var step in steps) {
-              vehicles[step] = timeDimension.filter(step).top(Infinity)
-            }
-            timeDimension.filter(null);
-
-            updateXScale("x");
-            updateYScale("y");
-            step = firstStep;
-            showVehicles(vehicles[step])
-
-            drawChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", groupSize)
-            drawChart("#num-stops", "Step", "Number of congestion reports", timeDimension, timeGroup, "step", "stops_count", groupSize)
-            
-      }
       function drawHistogram(selection, xLabel, yLabel, dimension, group, nBins, binWidth) {
         counts = group.all();
         var xMin = counts[0].key
@@ -348,9 +275,7 @@ window.onload = function() {
           .on('mouseout', tip.hide)
       }
 
-      function drawChart(selection, xLabel, yLabel, dimension, group, keyAccessor, valueAccessor, groupSize) {
-        var xMin = dimension.bottom(1)[0][keyAccessor]
-        var xMax = dimension.top(1)[0][keyAccessor];
+      function createChart(selection, xLabel, yLabel, dimension, group, keyAccessor, valueAccessor, xMin, xMax) {
         var chart = dc.lineChart(selection);
         chart
           // .width(580)
@@ -395,23 +320,13 @@ window.onload = function() {
             // moveChart.filter(chart.filter());
         });
       }
-
-      function gotVehicles(){
-        if (dataLoaded == lastStep/stepSize) {
-          $('.error').html("");
-          updateXScale("x");
-          updateYScale("y");
-          step = firstStep;
-          showVehicles(vehicles[step])
-          // fisheyeEffect(vis)
-        }
-      }
       function showVehicles(vehicles) { 
+        if (!vehicles) {
+          return;
+        }
         updateAreaScale(sortMetric)
         var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
-        exitNodes
-          // .transition().duration(900).style("opacity",0)
-          .remove();
+        exitNodes.remove();
         newNodes = vis.selectAll('.node').data(vehicles, dataKey)
           .enter()
             .append('g')
@@ -419,31 +334,27 @@ window.onload = function() {
         newNodes.on('click', function(){
           var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
             , sel = d3.select(this)
-          
           if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
           var startTracking = d3.select(this).classed('selected')
           if (startTracking) {
-            d3.select('.staticTooltip').style('display', 'block')
+            d3.select('.staticTooltip.vehicle').style('display', 'block')
+            d3.select('.staticTooltip.community').style('display', 'block')
             trackedNode = sel
-            updateStaticTooltip(step);
+            trackedCommunityId = sel.data()[0].com_id
+            updatestaticTooltips(step);
           }
           else {
             trackedNode = 0
-            d3.select('.staticTooltip').style('display', 'none')
+            d3.select('.staticTooltip.vehicle').style('display', 'none')
           }
         })
         newNodes.append('circle')
-          
-        
         node = vis.selectAll('.node')
-        console.log("nodes", node)
         node
           .call(updatePos) 
           .call(updateColor)
-          // .call(tooltipEffect);
         fisheyeEffect(vis)
       }
-      
       function updateXScale(metric) {
         maxX = 0;
         for (var i = firstStep; i < lastStep; i += stepSize)  {
@@ -473,42 +384,121 @@ window.onload = function() {
           colorScales[i].domain([0, d3.max(vehicles[step],function(d){ return d[metric] }) ])
         }
       }
-      function createTooltip(vis){
-        d3.select('.tooltip').remove();
-        tooltip = vis.append('g').attr('class', 'tooltip')
-        tooltip.append('rect').attr({ width: 130, height: 200, rx: 5, ry: 5, class: 'bg' })
-        var desc = tooltip.append('g').attr('class', 'desc')
-        desc.append('text').attr('class', 'main').text('').attr('transform', 'translate(5,5)')
-        desc.append('text').attr('class', 'id').text('Vehicle: ').attr('transform', 'translate(5,25)')
-        desc.append('text').attr('class','degree').text('Degree: ').attr('transform', 'translate(5,45)')
-        desc.append('text').attr('class', 'com_id').text('Community id: ').attr('transform', 'translate(5,65)')
-        desc.append('text').attr('class','com_size').text('Community size: ').attr('transform', 'translate(5,85)')
-        desc.append('text').attr('class','speed').text('Speed: ').attr('transform', 'translate(5,105)')
-        desc.append('text').attr('class','link').text('Link: ').attr('transform', 'translate(5,125)')
-        desc.append('text').attr('class','num_stops').text('Nu,ber of stops on link').attr('transform', 'translate(5,145)')
-        // desc.append('text').attr('class','position').text('position: ').attr('transform', 'translate(5,105)')
-        return tooltip
+      function createMonsters() {
+        if (vehicles && vehicles[step] && vehicles[step].length > 0) {
+          var cf = crossfilter(vehicles[step])
+          var communitiesDimension = cf.dimension(function(d) { return d.com_id });
+          var groupCommunities = communitiesDimension.group().reduce(
+            function(p,v) { // add
+              ++p.count;
+              if (v.num_stops > 1) { ++p.stops_count }
+              p.speed_sum += v.speed
+              p.speed_avg = p.speed_sum / p.count;
+              p.id = v.com_id;
+              return p;
+            },
+            function(p,v) { // remove
+              --p.count;
+              if (v[metric] > 0) { --p.stops_count }
+              p.speed_sum -= v.speed_sum;
+              p.speed_avg = p.speed_sum / p.count;
+              return p;
+            },
+            function() { // init
+              return { id: 0, count: 0, speed_sum: 0, speed_avg: 0, stops_count: 0 };
+            }
+          );
+          function orderValue(p) {
+            return p.count;
+          }
+          var communities = groupCommunities.order(orderValue).top(3);
+          console.log("monsters",communities);
+          d3.select("ul.monsters").selectAll('li').remove()
+
+          d3.select("ul.monsters").selectAll('li').data(communities, function(d){ return d.value.id })
+            .enter()
+              .append('li')
+              .attr('class', 'monster')
+          var monsterCommunityId = communities[0].value.id  
+          var monsterList = d3.select("ul.monsters").selectAll('li').data(communities, function(d){ return d.value.id })
+             .append('p').text(function(d) { return "Community: " +  d.value.id + ", size: " + d.value.count + ", average speed: " +  parseFloat(d.value.speed_avg).toFixed(2) + ", num_stops: " + d.value.stops_count })
+             .append('svg').append('g').attr('class', function(d) { return 'node ' + (d.value.id == monsterCommunityId ? "monster-community": "") })
+                .attr('transform', 'translate(' + 10 + ',' + 10 + ')')
+                .style('fill', function(d) { return colorScales["com_id"](d.value.id) })
+                .append('circle').attr('r', 5)
+         
+          
+
+          var monsterCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==monsterCommunityId ? d : null });
+          vis.selectAll('.node').classed('monster-community',false); 
+          monsterCommunityNodes.classed('monster-community',true); 
+              
+        }
       }
-      function createStaticTooltip(vis){
-        // d3.select('.staticTooltip').remove();
-        staticTooltip = d3.select("#staticTooltip").append('svg').append('g').attr('class', 'staticTooltip')
-            .attr('x',0)
-            .attr('y',0)   
-            .attr('transform', 'translate(' + 30 + ',' + 60 + ')')
-        staticTooltip.append('rect').attr({ width: 240, height: 240, rx: 5, ry: 5, class: 'bg' })
-        var desc = staticTooltip.append('g').attr('class', 'desc')
-        desc.append('text').attr('class', 'main').text("Click on a dot to track a vehicle").attr('transform', 'translate(5,15)')
-        desc.append('text').attr('class', 'id').attr('transform', 'translate(5,35)')
-        desc.append('text').attr('class','degree').attr('transform', 'translate(5,55)')
-        desc.append('text').attr('class', 'com_id').attr('transform', 'translate(5,75)')
-        desc.append('text').attr('class','com_size').attr('transform', 'translate(5,95)')
-        desc.append('text').attr('class','position').attr('transform', 'translate(5,115)')
-        desc.append('text').attr('class','speed').attr('transform', 'translate(5,135)')
-        desc.append('text').attr('class','link').attr('transform', 'translate(5,155)')
-        desc.append('text').attr('class','num_stops').attr('transform', 'translate(5,175)')
-        return staticTooltip
+      function createstaticTooltips(){      
+        // vehicle info 
+        var staticToltipType = "vehicle"
+        var staticTooltip = d3.select("#staticTooltips").append('div').attr('class', 'staticTooltip '+staticToltipType);
+        var titlebar = staticTooltip.append('div').attr('class','title');
+        $(".staticTooltip").draggable({handle: ".title"}); 
+        titlebar.append('span').attr('class', "text-info").html("<strong>Vehicle info</strong>")
+        titlebar.append('button').attr('type', "button").attr('class', "close").text('x')
+        var desc = staticTooltip.append('div').attr('class', 'body')
+        desc.append('p').attr('class', 'main').text("Click on a dot to track a vehicle")
+        desc.append('p').attr('class', 'id')
+        desc.append('p').attr('class','degree')
+        desc.append('p').attr('class', 'com_id')
+        desc.append('p').attr('class','com_size')
+        desc.append('p').attr('class','position')
+        desc.append('p').attr('class','speed')
+        desc.append('p').attr('class','link')
+        desc.append('p').attr('class','num_stops')
+        staticTooltip.append('div').attr('class', 'bg');
+        staticTooltips[staticToltipType] = staticTooltip;
+        d3.selectAll('.staticTooltip.vehicle .close').on('click', function(e) {
+          var sel = d3.select(this);
+          if (sel.attr('class') === "close") {
+            var parent  = $(sel[0]).parent().parent();
+            if (parent) { parent.hide(); }
+            if (trackedNode) { 
+              trackedNode.classed('selected',false); 
+              trackedNode = null;
+            }
+          }
+        });
+
+        // community info 
+        var staticToltipType = "community"
+        var staticTooltip = d3.select("#staticTooltips").append('div').attr('class', 'staticTooltip '+staticToltipType);
+        var titlebar = staticTooltip.append('div').attr('class','title');
+        $(".staticTooltip").draggable({handle: ".title"}); 
+        titlebar.append('span').attr('class', "text-info").html("<strong>Community info</strong>")
+        titlebar.append('button').attr('type', "button").attr('class', "close").text('x')
+        var desc = staticTooltip.append('div').attr('class', 'body')
+        desc.append('p').attr('class', 'main').text("Click on a dot to track a community")
+        desc.append('p').attr('class', 'id')
+        desc.append('p').attr('class','com_size')
+        desc.append('p').attr('class','speed')
+        desc.append('p').attr('class','area')
+        desc.append('p').attr('class','num_stops')
+        staticTooltip.append('div').attr('class', 'bg');
+        staticTooltips[staticToltipType] = staticTooltip;
+        d3.selectAll('.staticTooltip.community .close').on('click', function(e) {
+          var sel = d3.select(this);
+          if (sel.attr('class') === "close") {
+            var parent  = $(sel[0]).parent().parent();
+            if (parent) { parent.hide(); }
+          }
+          if (trackedCommunityId) { 
+              var trackedCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==trackedCommunityId  ? d : null });
+              trackedCommunityNodes.classed('in-community',false); 
+              trackedCommunityId = null;
+            }
+        });
       }
-      function updateStaticTooltip(step) {
+
+      function updatestaticTooltips(step) {
+        var staticTooltip = staticTooltips["vehicle"];
         if (trackedNode && trackedNode.data() && trackedNode.data().length > 0) {
           // find node's data for the current step
           vis.selectAll('.node').classed('selected',false)
@@ -518,16 +508,45 @@ window.onload = function() {
           if (d) {
             staticTooltip.select('rect').transition().attr({ width: 250, height: 300, rx: 5, ry: 5, class: 'bg' })
             staticTooltip.select('.main').text("Step: " + d.step)
-            staticTooltip.select('.id').text('Vehicle: ' + d.node_id)
+            staticTooltip.select('.id').text('Id: ' + d.node_id)
             staticTooltip.select('.degree').text('Degree: ' + d.degree)
-            staticTooltip.select('.com_id').text('Com_id: ' + d.com_id)
-            staticTooltip.select('.com_size').text('Com size: ' + d.com_size)
+            staticTooltip.select('.com_id').text('Community id: ' + d.com_id)
+            staticTooltip.select('.com_size').text('Community size: ' + d.com_size)
             staticTooltip.select('.position').text('x: ' + parseFloat(d.x).toFixed(2) + ", y: " + parseFloat(d.y).toFixed(2))
             staticTooltip.select('.speed').text('Speed: ' + parseFloat(d.speed).toFixed(2))
             staticTooltip.select('.link').text('Link: ' + d.link_id)
             staticTooltip.select('.num_stops').text('Number of stops on link: ' + d.num_stops)
           }
         }
+
+        var staticTooltip = staticTooltips["community"];
+        if (trackedCommunityId) {
+          // find node's data for the current step
+          vis.selectAll('.node').classed('in-community',false)
+          var trackedCommunityVehicles = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==trackedCommunityId ? d : null });
+          trackedCommunityVehicles.classed('in-community',true)
+          var avgSpeed = 0; // todo calculate from all nodes in tracked community - or crossfilter
+          var sumNumStops = 0; // todo calculate from all nodes in tracked community - or crossfilter
+          var area = 0; // todo calculate from all nodes in tracked community - or crossfilter
+          
+          // trackedCommunity = trackedCommunityVehicles[0][0]
+          if (trackedCommunityVehicles.data().length > 0) {
+            var d = trackedCommunityVehicles.data()[0];
+            trackedCommunityId = d.com_id;
+            if (d) {
+              staticTooltip.select('rect').transition().attr({ width: 250, height: 300, rx: 5, ry: 5, class: 'bg' })
+              staticTooltip.select('.main').text("Step: " + step)
+              staticTooltip.select('.id').text('Id: ' + d.com_id)
+              staticTooltip.select('.com_size').text('Community size: ' + d.com_size)
+              staticTooltip.select('.speed').text('Speed: ' + parseFloat(avgSpeed).toFixed(2))
+              staticTooltip.select('.link').text('Area: ' + parseFloat(area).toFixed(2))
+              staticTooltip.select('.num_stops').text('Number of stops: ' + sumNumStops)
+            }
+          }
+          else {
+            trackedCommunityId = null;
+          }
+        } 
       }
       function posTooltip(d) {
         var   posX = d.fisheye ? d.fisheye.x : xScale(d.x)
@@ -572,16 +591,21 @@ window.onload = function() {
         node.style('stroke', function(d) { 
           return colorScales[colorMetric](d[colorMetric]) 
         })
-        node.style("fill-opacity", function(d) { 
+        node.select('circle').style("opacity", function(d) { 
           if (colorMetric == "num_stops" && d[colorMetric] >= 2) {
             return 1
           }
-          return 0.8
+          return 0.5
         })
         node.style("stoke-opacity", 1);
         node.style('stroke-width', function(d) { 
-          if (colorMetric == "num_stops" && d[colorMetric] >= 2) {
-            return 5;
+          if (colorMetric == "num_stops") {
+            if (d[colorMetric] >= 2) {
+              return 5;
+            }
+            else {
+              return 0;
+            }
           }
           return 2;
         })
@@ -628,7 +652,6 @@ window.onload = function() {
         var newMetric = $(this).val()
         if (colorMetric === newMetric) return
         colorMetric = newMetric 
-        console.log("colorMetric", colorMetric)
         updateColorScale(colorMetric)
         node.transition().duration(1000).call(updateColor)
       })
@@ -653,20 +676,6 @@ window.onload = function() {
         updateMaxArea(areaRatio)
         node.select('circle').attr('r', radius)
       })
-      function tooltipEffect(vis) {
-        return vis.on('mouseover', function(d) {
-            d3.select('.tooltip').style('display', 'inherit')
-            sel = d3.select(this)
-            if(sel.node() !== node) sel.classed('highlighted', true)
-            // sel.select('circle').attr('transform', 'scale(' + 2 + ')')
-            posTooltip(d)
-          })
-          .on('mouseleave', function hideTooltip(d) {
-            d3.select('.tooltip').style('display', 'none')
-            if(sel.node() !== node) sel.classed('highlighted', false)
-            // sel.select('circle').attr('transform', 'scale(' + 0.5 + ')')
-        })  
-      }
       function fisheyeEffect(vis){
         return vis.on('mouseover', function(d){
           var m = d3.mouse(this);
@@ -718,7 +727,6 @@ window.onload = function() {
         if (!maxNode) return;
         if(topNode) topNode.classed('active', false)
         topNode = d3.select(maxNode).classed('active', true)
-        posTooltip(topNode.datum())
       }
 
       $(document).keypress(function(e){
@@ -759,12 +767,17 @@ window.onload = function() {
         $elem.parent().append($elem);
       }
       function play() {
-        step += stepSize;
-        onStepUpdated();
-        slider.slider({value :step });
-        timer = setTimeout(function() {  
-          play();
-        }, timerDelay);
+        if (step < lastStep) {
+          step += stepSize;
+          onStepUpdated();
+          slider.slider({value :step });
+          timer = setTimeout(function() {  
+            play();
+          }, timerDelay);
+        }
+        else {
+          pause();
+        }
       }
       function pause() {
         if (timer) {

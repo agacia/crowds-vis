@@ -99,7 +99,7 @@ window.onload = function() {
       }
       function cubs(data) {
       	context = cubism.context()
-                    .step(6e4) // Distance between data points in milliseconds
+                    .step(5 * 60 * 1e4) // Distance between data points in milliseconds 5 minutes per value
                     .size(1000) // Number of data points
                     .stop();   // Fetching from a static data source; don't update values
 
@@ -159,7 +159,7 @@ window.onload = function() {
           .insert("div", ".bottom")        // Insert the graph in a div  
           .attr("class", "horizon")        // Turn the div into
           .call(context.horizon()          // a horizon graph
-          .format(d3.format("d"))   // Format the values to 2 floating-point decimals
+          .format(d3.format("d min"))   // Format the values to 2 floating-point decimals
           // .format(d3.time.format("%Y-%m-%d %X"))
           .height(200))
 

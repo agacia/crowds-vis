@@ -69,6 +69,13 @@ select{ margin: 0 10px; }
 	text-align: center;
 }
 
+.loader-content .progress-bar, .loader-content h4 {
+	height: 20px;
+	width: 100px;
+	margin-left:-15px;
+	margin-top: 10px;
+}
+
 .loader-image {
 	z-index: 1000;
 	width: 64px;
@@ -77,8 +84,44 @@ select{ margin: 0 10px; }
 	background: #fff url('../imgs/loader.gif') no-repeat center center;
 }
 
-.tooltip {  position:relative; }
-.staticTooltip { display: none; }
+.tooltip { position:relative; }
+.staticTooltip { 
+	display: none; 
+	z-index: 500;
+}
+.staticTooltip .bg {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: #ccc; 
+	border: 2px solid #fff;
+	border-radius: 5px;
+	opacity: 0.6;
+	z-index: 490;
+	top: 0;
+	left: 0;
+}
+.staticTooltip .title {
+	padding: 5px;
+	cursor: pointer;
+	z-index: 495;
+	position: relative;
+	border-bottom: 1px solid #fff;
+}
+.staticTooltip .title .close {
+	margin: -1px 4px 0 0;
+}
+.staticTooltip .body {
+	padding: 8px;
+	z-index: 495;
+	position: relative;
+}
+
+.staticTooltip p {
+	margin: 0;
+	padding: 0;
+	line-height: 1 em;
+}
 .tooltip .bg, .staticTooltip .bg { opacity: 0.4; }
 .tooltip text, .staticTooltip text {
 fill: white;
@@ -224,3 +267,4 @@ display: none;
 #charts path {
 	fill: none;
 }
+
