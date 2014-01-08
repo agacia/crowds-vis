@@ -77,14 +77,18 @@ window.onload = function() {
         , trackedCommunityId = 0
         , staticTooltips = {}
         , communities
+        , tip = new InfoTooltip()
 
       if ( window.self !== window.top ){
         // we're in an iframe!
       }
 
+      tip(".project-info")
+      tip.show();
+      
       loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv");
       createstaticTooltips(); 
-      
+
       function loadFile(url) {
         $('.loader').show()
         var xhr = d3.tsv(url)
@@ -97,14 +101,21 @@ window.onload = function() {
           })
           .on("load", function(data) { 
             $('.loader').hide();
+            tip.hide();
             $('.error').html("");
             vehicles = {}
+            console.log("1")
             vis.selectAll('.node').remove()
+            console.log("2")
             // d3.select('body').selectAll('.chart').selectAll().remove()
             areaRatio = 1;
             d3.select(".data-status").html("Loaded " + data.length + " rows of data...")
+
+            console.log("3")
             // console.log("loaded data", data)
             gotData(data)
+
+            console.log("4",url)
           })
           .on("error", function(error) { 
             $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
@@ -161,8 +172,8 @@ window.onload = function() {
         initialiseMonsterTracker();
         createMonsters();
 
-        createChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", firstStep, lastStep)
-        createChart("#num-stops", "Step", "Number of congestion reports", timeDimension, timeGroup, "step", "stops_count", firstStep, lastStep)
+        // createChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", firstStep, lastStep)
+        // createChart("#num-stops", "Step", "Number of congestion reports", timeDimension, timeGroup, "step", "stops_count", firstStep, lastStep)
            
       }
       function initialiseSlider(firstStep, lastStep, stepSize, callback) {
@@ -280,7 +291,7 @@ window.onload = function() {
       function createChart(selection, xLabel, yLabel, dimension, group, keyAccessor, valueAccessor, xMin, xMax) {
         var chart = dc.lineChart(selection);
         chart
-          // .width(580)
+          .width(580)
           .height(160)
           .x(d3.scale.linear().domain([xMin,xMax]))
           // .interpolate('step-before')
@@ -688,7 +699,6 @@ window.onload = function() {
       })
       $('.algorithm-select').on('change', function(){
         var newAlgorithm = $(this).val()
-        console.log("algorithm === newAlgorithm", algorithm, newAlgorithm)
         if (algorithm === newAlgorithm) return
         algorithm = newAlgorithm
         loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv");

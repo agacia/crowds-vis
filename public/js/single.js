@@ -93,9 +93,9 @@ window.onload = function() {
         // we're in an iframe! oh no! hide the twitter follow button
       }
 
-
       tip(".project-info")
       tip.show();
+
       loadFiles(rootUrl, scenario, algorithm, filename);
       createStaticTooltip();
       vis.call(createTooltip)   

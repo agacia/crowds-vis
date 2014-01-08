@@ -5,6 +5,17 @@ block styles
 
 block content
 	#staticTooltip	
+	span.project-info-icon.glyphicon.glyphicon-info-sign
+	.project-info 
+		.title 
+			h3 Project information
+			button(type="button", class="close glyphicon glyphicon-remove")
+		.body 
+			h4 Description
+			p Visualisation of car sharing data.
+			h4 Usage
+			p 1. Watch the number of trips according to date. 
+		.bg
 
 	.container
 
@@ -38,3 +49,5 @@ block scripts
 	<script src="js/vendor/crossfilter.min.js"></script>
 	<script src="js/vendor/dc.js"></script>
 	<script src="js/vendor/cubism.v1.min.js"></script>
+	<script src="js/tooltip.js"></script>
+	

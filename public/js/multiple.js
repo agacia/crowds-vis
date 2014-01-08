@@ -41,7 +41,7 @@ window.onload = function() {
     , yScaleMax = 0, yScaleMin = 99999
     , timer
     , timerDelay = 300
-
+    , tip = new InfoTooltip()
 
   $(".slider").slider()
     .find(".ui-slider-handle")
@@ -50,6 +50,9 @@ window.onload = function() {
   if ( window.self !== window.top ){
     // we're in an iframe! oh no! hide the twitter follow button
   }
+
+  tip(".project-info")
+  tip.show();    
 
   $('#loader').show();
   initializeSelect();
@@ -125,6 +128,7 @@ window.onload = function() {
           // console.log("loaded", loadedImgs)   
           if (loadedImgs == totalImgs) {
             $(".loader").hide()
+            tip.hide();
           }
         })
         .attr('src', function(d) {

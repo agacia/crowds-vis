@@ -4,31 +4,44 @@ block styles
 	link(rel='stylesheet', href='/css/multiple.css')
 
 block content
-	<a class="playbutton play icon">Pause / Play</a>
-	
-	span.player
-		<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
-		<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
-	
-	span Time:
-		span(class="slider")
-	
-	span Chart: 
-		select(class="sort-by")
-			option(value="com_size") Community size 
-			option(value="degree") Degree 
-			option(value="cos_score") Community score
+	.dashboard
+		span.project-info-icon.glyphicon.glyphicon-info-sign
+		.project-info 
+			.title 
+				h3 Project information
+				button(type="button", class="close glyphicon glyphicon-remove")
+			.body 
+				h4 Description
+				p Side by side comparison of results of different algorithms.
+				p 
+				h4 Usage
+				p 1. Select the metric for charts. 
+				p 4. Click Play or move timeline to see the evolution of communities.
+				p 5. Watch the metric value shown on charts.
+			.bg
 
-	
-	span.graph-metrics
-		span.title
-			p Graph statistics:
-		span.metrics
+		<a class="playbutton play icon">Pause / Play</a>
+		span.player
+			<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+			<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+		span Time:
+			span(class="slider")
+		
+		span Chart: 
+			select(class="sort-by")
+				option(value="com_size") Community size 
+				option(value="degree") Degree 
+				option(value="cos_score") Community score
+		
+		span.graph-metrics
+			span.title
+				p Graph statistics:
+			span.metrics
 
-	//-span.zoomer
-	//-	<button class="zoom-in btn" width="100" height="100" >+</button>
-	//-	<button class="zoom-out btn" width="100" height="100">-</button>
-	
+		//-span.zoomer
+		//-	<button class="zoom-in btn" width="100" height="100" >+</button>
+		//-	<button class="zoom-out btn" width="100" height="100">-</button>
+		
 
 	div.algorithms
 
@@ -36,4 +49,5 @@ block content
 block scripts
 	<script src="js/line-chart.js"></script>
 	<script src="js/multiple.js"></script>
+	<script src="js/tooltip.js"></script>
 	

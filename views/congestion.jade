@@ -5,38 +5,59 @@ block styles
 
 block content
 	#staticTooltips
+	span.project-info-icon.glyphicon.glyphicon-info-sign
+	.project-info 
+		.title 
+			h3 Project information
+			button(type="button", class="close glyphicon glyphicon-remove")
+		.body 
+			h4 Description
+			p Visualisation of self organisation of connected vehicles into communities.
+			p Each dot represents a postion of a conneted vehicle. The color indicates a community that the vehicle belongs to.
+			h4 Usage 
+			p 1. Select the label-propagation community detection algorithm.  
+			p 2. Select the coloring dependent on only community or add information about vehicle speed or congestion. Vehicle's speed is represented as a colored circle stroke (ranging from green to red). Congestion is represented by number of vehicle's stops. If a vehicle stops more than once on a link over the cycle course, the link is considered as congested. The circle stroke indicates how many times a vehicle stops on a link.  
+			p 3. Choose the dot's size metric based on community size, community score and the node degree (number of neighbors).
+			p 4. Click Play or move timeline to see the evolution of communities.
+			p 5. Click on a dot to track the details of the vehicle and its community.
+			p 6. Watch on the table the biggest communities and their properties. For highlighting the monster community (the biggest community at the current time) select the checkbox 'Track the monster community'.
+			p 7. Watch charts prepresenting graph's statistics over time and more.
+		.bg
 
 	.container
-		.col-xs-12.col-sm-6.vis-column
-			.row
-				span.algorithm.col-xs-12.col-sm-6 Algorithm: 
-					select(class="algorithm-select")
-						option(value="MobileSandSharc-avg-1") Mobile Sharc Average 1
-						option(value="MobileSandSharc-instant-1") Mobile Sharc Instant 1
-				span.col-xs-12.col-sm-6
-					<a class="playbutton play icon">Pause / Play</a>
-					span.player
-						<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
-						<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+		.col-xs-12.col-sm-7.vis-column
+			.dashboard
+				.row
+					span.algorithm.col-xs-12.col-sm-6 Algorithm: 
+						select(class="algorithm-select")
+							option(value="MobileSandSharc") Mobile Sharc 
+							option(value="MobileSandSharc-avg-test") Mobile Sharc Average Test
+							option(value="MobileSandSharc-avg-1") Mobile Sharc Average 1
+							option(value="MobileSandSharc-instant-1") Mobile Sharc Instant 1
+					span.col-xs-12.col-sm-6
+						<a class="playbutton play icon">Pause / Play</a>
+						span.player
+							<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+							<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+					
+						span.slider
+				.row
+					span.col-xs-12.col-sm-6 Color by: 
+						select(class="color-by")
+							option(value="com_id") Community id
+							option(value="speed") Speed 
+							option(value="num_stops") Number of stops
+					
+					span.col-xs-12.col-sm-6 Size by: 
+						select(class="sort-by")
+							option(value="com_size") Community size 
+							option(value="degree") Degree 
+							option(value="com_score") Community score
 				
-					span.slider
-			.row
-				span.col-xs-12.col-sm-6 Color by: 
-					select(class="color-by")
-						option(value="com_id") Community id
-						option(value="speed") Speed 
-						option(value="num_stops") Number of stops
-				
-				span.col-xs-12.col-sm-6 Size by: 
-					select(class="sort-by")
-						option(value="com_size") Community size 
-						option(value="degree") Degree 
-						option(value="com_score") Community score
-			
 			.row
 				#visualisation
 
-		.col-xs-12.col-sm-6
+		.col-xs-12.col-sm-5
 			
 			#communities
 				h4 List of communities:
@@ -56,17 +77,15 @@ block content
 								th Number of stops
 								th Color
 					
-					
-			#stats
+				
 			.data-status 
-			///.chart#hist-vehicles
 			h4 Time series
 			#charts
 				.chart#num-vehicles
 				.chart#num-stops
-	
-	
-	
+				
+			#stats
+			.chart#hist-vehicles
 
 block scripts
 	<script src="js/congestion.js"></script>
@@ -74,3 +93,4 @@ block scripts
 	<script src="js/vendor/crossfilter.min.js"></script>
 	<script src="js/vendor/dc.js"></script>
 	///<script src="js/vendor/gauss.js"></script>
+	<script src="js/tooltip.js"></script>
