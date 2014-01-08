@@ -11,7 +11,8 @@ block content
 			.row
 				span.algorithm.col-xs-12.col-sm-6 Algorithm: 
 					select(class="algorithm-select")
-						option(value="MobileSandSharc") Mobile Sand Sharc
+						option(value="MobileSandSharc-avg-1") Mobile Sharc Average 1
+						option(value="MobileSandSharc-instant-1") Mobile Sharc Instant 1
 				span.col-xs-12.col-sm-6
 					<a class="playbutton play icon">Pause / Play</a>
 					span.player
@@ -36,15 +37,31 @@ block content
 				#visualisation
 
 		.col-xs-12.col-sm-6
-			h4 Statistics
-				h5 Dominant communities:
-				ul.monsters
+			
+			#communities
+				h4 List of communities:
+			
+				/// tracker
+				label.monsters.tracker Track the monster community <span class='toggle'><input type='checkbox' name='trackMonster' id='trackMonsterToggle' /></span>
+					span.icon
+
+				.span12.table-graph
+					table.table.table-hover.dc-monster-table#dc-monster-graph
+						thead
+							tr.header
+								th Name
+								th Size
+								th Average speed
+								th Stddev speed
+								th Number of stops
+								th Color
+					
+					
 			#stats
 			.data-status 
-			.chart#hist-vehicles
+			///.chart#hist-vehicles
 			h4 Time series
 			#charts
-				.charts-status 
 				.chart#num-vehicles
 				.chart#num-stops
 	
@@ -56,3 +73,4 @@ block scripts
 	<script src="js/vendor/fisheye.js"></script>
 	<script src="js/vendor/crossfilter.min.js"></script>
 	<script src="js/vendor/dc.js"></script>
+	///<script src="js/vendor/gauss.js"></script>

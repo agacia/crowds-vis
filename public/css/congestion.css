@@ -105,6 +105,22 @@ text-shadow: 0 1px 0 #fff;
 }
 
 .monsters svg {
-	height: 20px;
+	height: 15px;
 	width: 20px;
+}
+
+.monsters.tracker {
+	position: relative;
+}
+.monsters.tracker span.icon {
+	height: 14px;
+}
+.monsters.tracker span.icon svg {
+	float: right;
+	top: 0;
+	right: 0;
+}
+
+.dc-table-label {
+	display: none;
 }

@@ -76,7 +76,7 @@ window.onload = function() {
         , trackedNode = 0
         , trackedCommunityId = 0
         , staticTooltips = {}
-        , monsters = {}
+        , communities
 
       if ( window.self !== window.top ){
         // we're in an iframe!
@@ -100,7 +100,7 @@ window.onload = function() {
             $('.error').html("");
             vehicles = {}
             vis.selectAll('.node').remove()
-            timerDelay = 100;
+            // d3.select('body').selectAll('.chart').selectAll().remove()
             areaRatio = 1;
             d3.select(".data-status").html("Loaded " + data.length + " rows of data...")
             // console.log("loaded data", data)
@@ -157,6 +157,8 @@ window.onload = function() {
         updateXScale("x");
         updateYScale("y");
         showVehicles(vehicles[step])
+
+        initialiseMonsterTracker();
         createMonsters();
 
         createChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", firstStep, lastStep)
@@ -384,10 +386,26 @@ window.onload = function() {
           colorScales[i].domain([0, d3.max(vehicles[step],function(d){ return d[metric] }) ])
         }
       }
+      function initialiseMonsterTracker() {
+        d3.select('.monsters.tracker .icon').append('svg').append('g').attr('class', 'node monster-community') 
+              .attr('transform', 'translate(' + 10 + ',' + 8 + ')')
+              .append('circle').attr('r', 5)
+        $("#trackMonsterToggle").prop('checked') ? $('.monsters.tracker .icon').show() : $('.monsters.tracker .icon').hide();
+        $("#trackMonsterToggle").on('click', function(d) {
+          $("#trackMonsterToggle").prop('checked') ? $('.monsters.tracker .icon').show() : $('.monsters.tracker .icon').hide();
+          updateMonsterCommunity()
+        });
+      }
       function createMonsters() {
         if (vehicles && vehicles[step] && vehicles[step].length > 0) {
           var cf = crossfilter(vehicles[step])
           var communitiesDimension = cf.dimension(function(d) { return d.com_id });
+
+          // var set = new gauss.Vector(5, 1, 3, 2, 21);
+          // var numbers = new Vector([8, 6, 7, 5, 3, 0, 9]);
+          // var times = new TimeSeries([1315378833000, 3.5], [1315789015000, 7.826]);
+          // console.log("set",set, "numbers", numbers, "times", times)
+
           var groupCommunities = communitiesDimension.group().reduce(
             function(p,v) { // add
               ++p.count;
@@ -411,29 +429,39 @@ window.onload = function() {
           function orderValue(p) {
             return p.count;
           }
-          var communities = groupCommunities.order(orderValue).top(3);
-          console.log("monsters",communities);
-          d3.select("ul.monsters").selectAll('li').remove()
+          communities = groupCommunities.order(orderValue).top(3);
+    
+          var monsterTable = dc.dataTable("#dc-monster-graph");
+          monsterTable.width(800).height(800)
+            .dimension(groupCommunities)
+            .group(function(d) { return ""})
+            .size(10)
+            .columns([
+            function(d) { return d.value.id },
+            function(d) { return d.value.count },
+            function(d) { return parseFloat(d.value.speed_avg).toFixed(2) },
+            function(d) { return parseFloat(d.value.speed_avg).toFixed(2) },
+            function(d) { return d.value.stops_count },
+            function(d) { return '<svg><g class="node" transform="translate(10,10)" style="fill:'+colorScales["com_id"](d.value.id)+'"><circle r="5"></circle>/g></svg>' }
+            ])
+            .sortBy(orderValue)
+            .order(d3.ascending);
 
-          d3.select("ul.monsters").selectAll('li').data(communities, function(d){ return d.value.id })
-            .enter()
-              .append('li')
-              .attr('class', 'monster')
-          var monsterCommunityId = communities[0].value.id  
-          var monsterList = d3.select("ul.monsters").selectAll('li').data(communities, function(d){ return d.value.id })
-             .append('p').text(function(d) { return "Community: " +  d.value.id + ", size: " + d.value.count + ", average speed: " +  parseFloat(d.value.speed_avg).toFixed(2) + ", num_stops: " + d.value.stops_count })
-             .append('svg').append('g').attr('class', function(d) { return 'node ' + (d.value.id == monsterCommunityId ? "monster-community": "") })
-                .attr('transform', 'translate(' + 10 + ',' + 10 + ')')
-                .style('fill', function(d) { return colorScales["com_id"](d.value.id) })
-                .append('circle').attr('r', 5)
-         
+          // console.log(monsterTable);
+          // dc.renderAll();
+          monsterTable.render();
+
+          updateMonsterCommunity()
           
-
-          var monsterCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==monsterCommunityId ? d : null });
-          vis.selectAll('.node').classed('monster-community',false); 
-          monsterCommunityNodes.classed('monster-community',true); 
-              
         }
+      }
+      function updateMonsterCommunity() {
+        var monsterCommunityId = communities[0].value.id  
+        var monsterCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==monsterCommunityId ? d : null });
+          vis.selectAll('.node').classed('monster-community',false); 
+          if ($('#trackMonsterToggle').prop('checked')) {
+            monsterCommunityNodes.classed('monster-community',true); 
+          }
       }
       function createstaticTooltips(){      
         // vehicle info 
@@ -514,6 +542,9 @@ window.onload = function() {
             staticTooltip.select('.com_size').text('Community size: ' + d.com_size)
             staticTooltip.select('.position').text('x: ' + parseFloat(d.x).toFixed(2) + ", y: " + parseFloat(d.y).toFixed(2))
             staticTooltip.select('.speed').text('Speed: ' + parseFloat(d.speed).toFixed(2))
+            if (d.avg_speed !== undefined) {
+              staticTooltip.select('.speed').text('Speed: ' + parseFloat(d.speed).toFixed(2) + ", avg speed: " + parseFloat(d.avg_speed).toFixed(2))
+            }
             staticTooltip.select('.link').text('Link: ' + d.link_id)
             staticTooltip.select('.num_stops').text('Number of stops on link: ' + d.num_stops)
           }
@@ -657,9 +688,10 @@ window.onload = function() {
       })
       $('.algorithm-select').on('change', function(){
         var newAlgorithm = $(this).val()
+        console.log("algorithm === newAlgorithm", algorithm, newAlgorithm)
         if (algorithm === newAlgorithm) return
         algorithm = newAlgorithm
-        loadFiles(rootUrl, scenario, algorithm, filename);
+        loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv");
       })
       $('.scenario-select').on('change', function(){
         var newScenario = $(this).val()
