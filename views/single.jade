@@ -3,30 +3,47 @@ extends layout
 block styles
 	link(rel='stylesheet', href='/css/single.css')
 
-block content			
-	span.algorithm Algorithm: 
-		select(class="algorithm-select")
-			option(value="MobileLeungSDSD") Mobile Leung
-			option(value="Leung") Leung
-			option(value="EpidemicCommunityAlgorithm") Epidemic
+block content	
+	.dashboard
+		span.project-info-icon.glyphicon.glyphicon-info-sign
+		.project-info 
+			.title 
+				h3 Project information
+				button(type="button", class="close glyphicon glyphicon-remove")
+			.body 
+				h2 Description
+				p Visualisation of self organisation of connected vehicles into communities.
+				p Each dot represents a postion of a conneted vehicle. The color indicates a community that the vehicle belongs to.
+				h4 Usage 
+				p 2. Select one of three different label-propagation community detection algorithms.  
+				p 3. Choose the dot's size metric based on community size, community score and the node degree (number of neighbors).
+				p 4. Click Play or move timeline to see the evolution of communities.
+				p 5. Click on a dot to track the details of the vehicle.
+			.bg
 
-	<a class="playbutton play icon">Pause / Play</a>
-	
-	span.player
-		<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
-		<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
-	
-	span Time:
-		span(class="slider")
-	
-	span Sort by: 
-		select(class="sort-by")
-			option(value="com_size") Community size 
-			option(value="degree") Degree 
-			option(value="cos_score") Community score
-	
+		span.algorithm Algorithm: 
+			select(class="algorithm-select")
+				option(value="MobileLeungSDSD") Mobile Leung
+				option(value="Leung") Leung
+				option(value="EpidemicCommunityAlgorithm") Epidemic
+		
+		span Size by: 
+			select(class="sort-by")
+				option(value="com_size") Community size 
+				option(value="cos_score") Community score
+				option(value="degree") Degree 
+		
+		<a class="playbutton play icon">Pause / Play</a>
+		
+		span.player
+			<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+			<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+		span Time:
+			span(class="slider")
+
 	#container
 
 block scripts
 	<script src="js/single.js"></script>
 	<script src="js/vendor/fisheye.js"></script>
+	<script src="js/tooltip.js"></script>

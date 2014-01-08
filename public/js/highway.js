@@ -48,7 +48,7 @@ window.onload = function() {
           }
           return areaToRadius(areaScale(d[metric]), scale) 
         }
-        , dataKey = function(d){ return d.node_id }
+        , dataKey = function(d){ return d.id }
         , sortBy = function(by){ return function(a, b){ 
             if(a[by] === b[by]) return 0; else if(a[by] > b[by]) return -1;
             return 1;
@@ -59,8 +59,9 @@ window.onload = function() {
             // step  id x y degree  neighbors cc_id cc_size com_id  cos_score com_size
             var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
-            d.id = id++;
-            d.order = order++;
+            // d.id = id++;
+            // d.node_id = d.id
+            // d.order = order++;
             return d;
         }
         , formatGroup = function(d){ // when read cvs
@@ -94,18 +95,23 @@ window.onload = function() {
         , timerDelay = 300
         , trackedNode = 0
         , staticTooltip
+        , tip = new InfoTooltip()
 
       $(".slider").slider()
         .find(".ui-slider-handle")
         .append(dateLabel)
 
+      tip(".project-info")
+      tip.show();
+
       if ( window.self !== window.top ){
         // we're in an iframe! oh no! hide the twitter follow button
       }
       loadFiles(rootUrl, scenario, algorithm, filename);
-      vis.call(createStaticTooltip);
+      createStaticTooltip();
       vis.call(createTooltip)   
-      
+
+
       function onStepUpdated() {
         showVehicles(vehicles[step])
         dateLabel.text(step)        
@@ -202,41 +208,37 @@ window.onload = function() {
         }
       }
       function showVehicles(vehicles) { 
+        tip.hide();
         // console.log("showing step ", step, vehicles)  
         updateAreaScale(sortMetric)
         var exitNodes = vis.selectAll('.node').data(vehicles, dataKey).exit()
-        // console.log("step", step, " exit nodes ", exitNodes)
-        exitNodes
-          // .transition().duration(900).style("opacity",0)
-          .remove();
-        node = vis.selectAll('.node').data(vehicles)
+        exitNodes.remove();
+        newNodes = vis.selectAll('.node').data(vehicles, dataKey)
           .enter()
             .append('g')
             .attr('class', 'node')  
-        // console.log("step", step, " nodes ", node)
-        node.on('click', function(){
-          var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
-            , sel = d3.select(this)
-          
-          if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
+        newNodes.on('click', function(){
+          var sel = d3.select(this);
+          vis.selectAll('.node').classed('selected', false);
+          sel.classed('selected', !d3.select(this).classed('selected'))
           var startTracking = d3.select(this).classed('selected')
           if (startTracking) {
-            d3.select('.staticTooltip').style('display', 'block')
-            trackedNode = sel
+            d3.select('.staticTooltip.vehicle').style('display', 'block')
+            trackedNode = sel;
             updateStaticTooltip(step);
           }
           else {
             trackedNode = 0
-            d3.select('.staticTooltip').style('display', 'none')
+            d3.select('.staticTooltip.vehicle').style('display', 'none')
           }
-        })
-        node.append('circle')
+        });
+        newNodes.append('circle')
+        node = vis.selectAll('.node')
+        node
+          .call(updatePos) 
           .call(updateColor)
-        node.call(updatePos) 
-          // .call(tooltipEffect);
         fisheyeEffect(vis)
-      }
-      
+      }      
       function updateXScale(metric) {
         maxX = 0;
         for (var i = firstStep; i < lastStep; i += stepSize)  {
@@ -274,21 +276,36 @@ window.onload = function() {
         // desc.append('text').attr('class','position').text('position: ').attr('transform', 'translate(5,105)')
         return tooltip
       }
-      function createStaticTooltip(vis){
-        // d3.select('.staticTooltip').remove();
-        // console.log("pos", max_area)
-        staticTooltip = vis.append('g').attr('class', 'staticTooltip')
-            .attr('x',0)
-            .attr('y',0)   
-            .attr('transform', 'translate(' + 30 + ',' + 60 + ')')
-        staticTooltip.append('rect').attr({ width: 240, height: 30, rx: 5, ry: 5, class: 'bg' })
-        var desc = staticTooltip.append('g').attr('class', 'desc')
-        desc.append('text').attr('class', 'main').text("Click on a dot to track a vehicle").attr('transform', 'translate(5,15)')
-        desc.append('text').attr('class', 'id').attr('transform', 'translate(5,35)')
-        desc.append('text').attr('class','degree').attr('transform', 'translate(5,55)')
-        desc.append('text').attr('class', 'com_id').attr('transform', 'translate(5,75)')
-        desc.append('text').attr('class','com_size').attr('transform', 'translate(5,95)')
-        desc.append('text').attr('class','position').attr('transform', 'translate(5,105)')
+      function createStaticTooltip(){
+        // vehicle info 
+        var staticToltipType = "vehicle"
+        staticTooltip = d3.select("body").append('div').attr('class', 'staticTooltip '+staticToltipType);
+        var titlebar = staticTooltip.append('div').attr('class','title');
+        $(".staticTooltip").draggable({handle: ".title"}); 
+        titlebar.append('span').attr('class', "text-info").html("<strong>Vehicle info</strong>")
+        titlebar.append('button').attr('type', "button").attr('class', "close").text('x')
+        var desc = staticTooltip.append('div').attr('class', 'body')
+        desc.append('p').attr('class', 'main').text("Click on a dot to track a vehicle")
+        desc.append('p').attr('class', 'id')
+        desc.append('p').attr('class','degree')
+        desc.append('p').attr('class', 'com_id')
+        desc.append('p').attr('class','com_size')
+        desc.append('p').attr('class','position')
+        desc.append('p').attr('class','speed')
+        desc.append('p').attr('class','link')
+        desc.append('p').attr('class','num_stops')
+        staticTooltip.append('div').attr('class', 'bg');
+        d3.selectAll('.staticTooltip.vehicle .close').on('click', function(e) {
+          var sel = d3.select(this);
+          if (sel.attr('class') === "close") {
+            var parent  = $(sel[0]).parent().parent();
+            if (parent) { parent.hide(); }
+            if (trackedNode) { 
+              trackedNode.classed('selected',false); 
+              trackedNode = null;
+            }
+          }
+        });
         return staticTooltip
       }
       function updateStaticTooltip(step) {
@@ -299,7 +316,7 @@ window.onload = function() {
           d = trackedNode.data()[0];
           if (d) {
             // console.log("show data ", trackedNode.data()[0]['id'])
-            staticTooltip.select('rect').transition().attr({ width: 250, height: 100, rx: 5, ry: 5, class: 'bg' })
+            // staticTooltip.select('rect').transition().attr({ width: 250, height: 100, rx: 5, ry: 5, class: 'bg' })
             staticTooltip.select('.main').text("Tracked vehicle:")
             staticTooltip.select('.id').text('Vehicle: ' + d.id)
             staticTooltip.select('.degree').text('Degree: ' + d.degree)
@@ -390,12 +407,14 @@ window.onload = function() {
         var newAlgorithm = $(this).val()
         if (algorithm === newAlgorithm) return
         algorithm = newAlgorithm
+        pause();
         loadFiles(rootUrl, scenario, algorithm, filename);
       })
       $('.scenario-select').on('change', function(){
         var newScenario = $(this).val()
         if (scenario === newScenario) return
         scenario = newScenario
+        pause();
         loadFiles(rootUrl, scenario, algorithm, filename);
       })
       $(window).resize(function(){

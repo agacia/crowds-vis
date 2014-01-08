@@ -84,7 +84,7 @@ window.onload = function() {
 
       loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv");
       createstaticTooltips(); 
-
+      
       function loadFile(url) {
         $('.loader').show()
         var xhr = d3.tsv(url)

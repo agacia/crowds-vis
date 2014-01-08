@@ -9,6 +9,9 @@ position: absolute;
 left: 0px;
 top: 0px;
 z-index: -10;
+margin-top: 70px;
+padding-top: 10px;
+overflow: visible;
 }
 
 .node { 
@@ -74,9 +77,4 @@ text-shadow: 0 1px 0 #fff;
 .selected {
 	color: red;
 	fill: black;
-}
-.vis {
-	margin-top: 60px;
-	padding-top: 10px;
-	overflow: visible;
 }
