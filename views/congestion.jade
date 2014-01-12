@@ -26,14 +26,20 @@ block content
 
 	.container
 		.col-xs-12.col-sm-7.vis-column
+			#loaderVeh.loader
+				.loader-content
+					progress(class="progress-bar", value="10", max="100") 0 %
+					/// .loader-image
+					h4 Loading data...
+					h5.size
 			.dashboard
 				.row
 					span.algorithm.col-xs-12.col-sm-6 Algorithm: 
 						select(class="algorithm-select")
-							option(value="MobileSandSharc") Mobile Sharc 
 							option(value="MobileSandSharc-avg-test") Mobile Sharc Average Test
-							option(value="MobileSandSharc-avg-1") Mobile Sharc Average 1
+							option(value="MobileSandSharc-avg-cluster-1") Mobile Sharc Average 1
 							option(value="MobileSandSharc-instant-1") Mobile Sharc Instant 1
+							option(value="MobileSandSharc") Mobile Sharc 
 					span.col-xs-12.col-sm-6
 						<a class="playbutton play icon">Pause / Play</a>
 						span.player
@@ -45,11 +51,13 @@ block content
 					span.col-xs-12.col-sm-6 Color by: 
 						select(class="color-by")
 							option(value="com_id") Community id
-							option(value="speed") Speed 
+							option(value="avg_speed") Average speed 
 							option(value="num_stops") Number of stops
 					
 					span.col-xs-12.col-sm-6 Size by: 
 						select(class="sort-by")
+							option(value="None") None 
+							option(value="avg_speed") Average speed
 							option(value="com_size") Community size 
 							option(value="degree") Degree 
 							option(value="com_score") Community score
@@ -58,23 +66,40 @@ block content
 				#visualisation
 
 		.col-xs-12.col-sm-5
-			
+			#loaderCom.loader
+				.loader-content
+					progress(class="progress-bar", value="10", max="100") 0 %
+					/// .loader-image
+					h4 Loading data...
+					h5.size
+
 			#communities
-				h4 List of communities:
-			
 				/// tracker
 				label.monsters.tracker Track the monster community <span class='toggle'><input type='checkbox' name='trackMonster' id='trackMonsterToggle' /></span>
 					span.icon
-
+				.span.communities-stats
+					.num-communities
+					.monster-community
 				.span12.table-graph
 					table.table.table-hover.dc-monster-table#dc-monster-graph
 						thead
 							tr.header
-								th Name
-								th Size
-								th Average speed
-								th Stddev speed
-								th Number of stops
+								th.com_id
+									a(type="button", class="sort glyphicon glyphicon-sort") Name
+								th.count 
+									a(type="button", class="sort glyphicon glyphicon-sort") Size
+								///th.speed_avg
+								///	a(type="button", class="sort glyphicon glyphicon-sort") Average speed
+								///th.speed_std
+								///	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed 
+								th.avg_speed_avg
+									a(type="button", class="sort glyphicon glyphicon-sort") Average avg speed
+								th.avg_speed_std
+									a(type="button", class="sort glyphicon glyphicon-sort") Stddev avg speed 
+								///th.num_stops_avg
+								///	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
+								th.congested_sum
+									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestions
 								th Color
 					
 				
@@ -94,3 +119,4 @@ block scripts
 	<script src="js/vendor/dc.js"></script>
 	///<script src="js/vendor/gauss.js"></script>
 	<script src="js/tooltip.js"></script>
+	<script src="js/vendor/underscore.js"></script>

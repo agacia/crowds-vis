@@ -60,15 +60,17 @@ select{ margin: 0 10px; }
 
 .loader-content {
 	position:absolute;
-	top:50%;
+	top:400px;
 	left:50%;
 	margin-top:-52px;
 	margin-left:-32px;
-	width: 64px;
-	height: 104px;
+	width: 70px;
+	height: 150px;
 	text-align: center;
 }
-
+.loader-content h5 {
+	margin-top: 20px;
+}
 .loader-content .progress-bar, .loader-content h4 {
 	height: 20px;
 	width: 100px;
@@ -88,7 +90,7 @@ select{ margin: 0 10px; }
 .staticTooltip { 
 	display: none; 
 	z-index: 500;
-	width: 200px;
+	width: 250px;
 }
 .staticTooltip .bg {
 	position: absolute;
@@ -315,4 +317,9 @@ display: none;
 }
 .dashboard {
 	margin: 10px;
+}
+
+th a:hover {
+	cursor: pointer;
+	text-decoration: none
 }

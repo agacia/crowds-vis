@@ -48,6 +48,14 @@ fill: yellow;
 	fill: yellow;
 }
 
+.node.selected-community {
+
+}
+.node.selected-community circle {
+	stroke: magenta;
+	fill: magenta;
+}
+
 .node.highlighted circle { 
 stroke-width: 1;
 stroke: yellow;
@@ -123,4 +131,9 @@ text-shadow: 0 1px 0 #fff;
 
 .dc-table-label {
 	display: none;
+}
+
+.table-graph {
+	overflow: scroll; 
+	height: 600px;
 }
