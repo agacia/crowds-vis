@@ -56,6 +56,12 @@ fill: yellow;
 	fill: magenta;
 }
 
+.node.originator circle { 
+stroke-width: 4;
+stroke: black;
+opacity: 1;
+}
+
 .node.highlighted circle { 
 stroke-width: 1;
 stroke: yellow;
@@ -117,13 +123,13 @@ text-shadow: 0 1px 0 #fff;
 	width: 20px;
 }
 
-.monsters.tracker {
+.tracker {
 	position: relative;
 }
-.monsters.tracker span.icon {
+.tracker span.icon {
 	height: 14px;
 }
-.monsters.tracker span.icon svg {
+.tracker span.icon svg {
 	float: right;
 	top: 0;
 	right: 0;

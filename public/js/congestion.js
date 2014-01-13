@@ -62,7 +62,7 @@ window.onload = function() {
           }
         , dataKey = function(d){ return d.node_id }
         , format = function(d) { // when read cvs
-            var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops'];
+            var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops', 'is_originator'];
             numKeys.forEach(function(key){ d[key] = Number(d[key]) })
             d.id = d.node_id;
             return d;
@@ -73,13 +73,21 @@ window.onload = function() {
             d.order = order++;
             return d;
         }
+        , stepsOffset = 841
+        , formatStep = function(step) {
+          var seconds = step + stepsOffset
+          if ((lastStep - firstStep) > 120) {
+           return (seconds/60).toFixed(2) + " min"
+          }
+          return seconds + " s"
+        }
         , topNode = null
         , rootUrl = 'data/'
         , scenario = "Manhattan"
         , slider
         , dateLabel = $("<div/>")
-                    .css({ position : 'absolute' , top : 0, left : 0 })
-                    .text(step)
+                    .css({ position : 'absolute' , top : 0, left : 0, width: "60px"})
+                    .text(formatStep(step))
         , vehicles = {}
         , timer
         , timerDelay = 300
@@ -176,6 +184,7 @@ window.onload = function() {
       function gotVehicles(data) {
         areaRatio = 1;
         vehicles = {}
+        console.log("got vehicles", data)
         vis.selectAll('.node').remove()
         var cf = crossfilter(data);
         // time dimension
@@ -247,7 +256,7 @@ window.onload = function() {
       }
       function onStepUpdated() {
         showVehicles(vehicles[step])
-        dateLabel.text(step)        
+        dateLabel.text(formatStep(step))        
         updatestaticTooltips(step);
         createMonsters(step);
       }
@@ -465,7 +474,7 @@ window.onload = function() {
       function updateColorScale(metric){
         for (var i in colorScales) {
           // if (i !== "avg_speed") {
-            console.log("update color scale ", vehicles[step], i, d3.max(vehicles[step],function(d){ return d[metric] }))
+            // console.log("update color scale ", vehicles[step], i, d3.max(vehicles[step],function(d){ return d[metric] }))
             colorScales[i].domain([0, d3.max(vehicles[step],function(d){ return d[metric] }) ])
           // }
         }
@@ -479,19 +488,29 @@ window.onload = function() {
           $("#trackMonsterToggle").prop('checked') ? $('.monsters.tracker .icon').show() : $('.monsters.tracker .icon').hide();
           updateMonsterCommunity()
         });
-        $("th .sort").on('click', function(d) {
-          monsterSortMetric = $(this).parent().attr('class')
-          d3.select(this).classed('asc', !d3.select(this).classed('asc'));
-          createMonsters(step, d3.select(this).classed('asc')) 
+        d3.select('.originators.tracker .icon').append('svg').append('g').attr('class', 'node originator') 
+              .attr('transform', 'translate(' + 10 + ',' + 8 + ')')
+              .append('circle').attr('r', 5)
+        $("#showOriginatorsToggle").prop('checked') ? $('.originators.tracker .icon').show() : $('.originators.tracker .icon').hide();
+        $("#showOriginatorsToggle").on('click', function(d) {
+          var trackOriginators = $("#showOriginatorsToggle").prop('checked') 
+          if (trackOriginators) {
+            $('.originators.tracker .icon').show() 
+            vis.selectAll(".node").classed("originator", function(d) {
+              return d.is_originator;
+            })
+          } 
+          else {
+            $('.originators.tracker .icon').hide();
+            vis.selectAll(".node").classed("originator", false)
+          }
         });
         
       }
-
+      function orderValue(p) {
+        return p[monsterSortMetric];
+      }
       function createMonsters(step, asc) {
-
-        function orderValue(p) {
-          return p[monsterSortMetric];
-        }
         d3.select(".communities-stats")
           .select('.num-communities').text("Number of communities: " + communitiesDimensions[step].bottom(Infinity).length)
         // d3.select(".communities-stats")
@@ -526,6 +545,19 @@ window.onload = function() {
             var selectedCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==selectedComId ? d : null });
             vis.selectAll('.node').classed('selected-community',false); 
             selectedCommunityNodes.classed('selected-community',true); 
+        });
+        $("th .sort").on('click', function(d) {
+          monsterSortMetric = $(this).parent().attr('class')
+          d3.select(this).classed('asc', !d3.select(this).classed('asc'));
+          var asc = d3.select(this).classed('asc')
+          if (asc == true) {
+            monsterTable.order(d3.ascending);
+          }
+          else {
+            monsterTable.order(d3.descending);
+          }
+          monsterTable.sortBy(orderValue);
+          monsterTable.render(); 
         });
         updateMonsterCommunity();  
       //   if (vehicles && vehicles[step] && vehicles[step].length > 0) {
@@ -608,6 +640,7 @@ window.onload = function() {
         desc.append('p').attr('class','speed')
         desc.append('p').attr('class','link')
         desc.append('p').attr('class','num_stops')
+        desc.append('p').attr('class','originator')
         staticTooltip.append('div').attr('class', 'bg');
         staticTooltips[staticToltipType] = staticTooltip;
         d3.selectAll('.staticTooltip.vehicle .close').on('click', function(e) {
@@ -665,8 +698,8 @@ window.onload = function() {
           trackedNode.classed('selected',true)
           d = trackedNode.data()[0];
           if (d) {
-            staticTooltip.select('rect').transition().attr({ width: 250, height: 300, rx: 5, ry: 5, class: 'bg' })
-            staticTooltip.select('.main').text("Step: " + d.step)
+            staticTooltip.select('rect').transition().attr({ width: 250, height: 330, rx: 5, ry: 5, class: 'bg' })
+            staticTooltip.select('.main').text("Step: " + (d.step+stepsOffset))
             staticTooltip.select('.id').text('Id: ' + d.node_id)
             staticTooltip.select('.degree').text('Degree: ' + d.degree)
             staticTooltip.select('.com_id').text('Community id: ' + d.com_id)
@@ -678,6 +711,7 @@ window.onload = function() {
             }
             staticTooltip.select('.link').text('Link: ' + d.link_id)
             staticTooltip.select('.num_stops').text('Number of stops on link: ' + d.num_stops)
+            staticTooltip.select('.originator').text('Is originator: ' + d.is_originator)
           }
         }
 
@@ -696,7 +730,7 @@ window.onload = function() {
             var d = trackedCommunityVehicles.data()[0];
             if (d) {
               staticTooltip.select('rect').transition().attr({ width: 250, height: 300, rx: 5, ry: 5, class: 'bg' })
-              staticTooltip.select('.main').text("Step: " + step)
+              staticTooltip.select('.main').text("Step: " + (d.step+stepsOffset))
               staticTooltip.select('.id').text('Id: ' + d.com_id)
               staticTooltip.select('.com_size').text('Community size: ' + d.com_size)
             }
@@ -755,10 +789,12 @@ window.onload = function() {
       }
       function updateColor(node){
         node.style('fill', function(d) { 
-          // return colorScales["com_id"](d["com_id"]) 
-          // return colorScales[colorMetric](d[colorMetric]) 
+          if (colorMetric === "num_stops") {
+            return colorScales["com_id"](d["com_id"]) 
+          }
           return colorScales[colorMetric](d[colorMetric]) 
         })
+        node.classed("originator", function(d) { return ($("#showOriginatorsToggle").prop('checked') && d.is_originator === 1) })
         node.style('stroke', function(d) { 
           return colorScales[colorMetric](d[colorMetric]) 
         })
@@ -771,6 +807,9 @@ window.onload = function() {
         node.style("stoke-opacity", 1);
         node.style('stroke-width', function(d) { 
           if (colorMetric == "num_stops") {
+            if (d.isOrginator === 1) {
+              return 7;
+            }
             if (d[colorMetric] >= 2) {
               return 5;
             }
