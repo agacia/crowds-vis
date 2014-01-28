@@ -4,6 +4,7 @@ padding: 0px;
 font-family: 'Droid Sans', sans-serif;
 overflow: scroll;
 color: #304059;
+padding: 20px;
 }
 
 h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
@@ -31,8 +32,8 @@ background-color: #45A697;
 
 select{ margin: 0 10px; }
 
-.header {
-
+#header {
+	height: 70px;
 }
 
 .header h3 {
@@ -135,9 +136,9 @@ display: inherit;
 }
 
 .slider {
-margin: 0 10px;
+margin: 0 5px;
 display: inline-block;
-width: 50%;
+width: 80%;
 }
 .playbutton {
 margin-top: -16px;
@@ -323,3 +324,12 @@ th a:hover {
 	cursor: pointer;
 	text-decoration: none
 }
+
+/*#wrapper {
+	width: 800px;
+}
+
+#wrapper #visualisation {
+	position: relative;
+	width: 800px;
+}*/

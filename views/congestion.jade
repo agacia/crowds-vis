@@ -36,10 +36,18 @@ block content
 				.row
 					span.algorithm.col-xs-12.col-sm-6 Algorithm: 
 						select(class="algorithm-select")
-							option(value="MobileSandSharc-avg-test") Mobile Sharc Average Test
-							option(value="MobileSandSharc-avg-cluster-1") Mobile Sharc Average 1
-							option(value="MobileSandSharc-instant-1") Mobile Sharc Instant 1
-							option(value="MobileSandSharc") Mobile Sharc 
+							option(value="MobileSandSharc-avg-test") Test
+							option(value="SandSharc") Only SandSharc
+							option(value="Mobile") Only Mobile
+							option(value="MobileSandSharc-0.5") 0.5 Mobile + 0.5 SandSharc
+							option(value="MobileSandSharc") Mobile * Sharc
+							option(value="dynamic-20") Dynamic 20
+							option(value="threshold-0.1") Threshold 0.1
+							option(value="threshold-0.2") Threshold 0.2
+							option(value="threshold-0.3") Threshold 0.3
+							option(value="threshold-0.4") Threshold 0.4
+							option(value="threshold-0.5") Threshold 0.5
+							
 					span.col-xs-12.col-sm-6
 						<a class="playbutton play icon">Pause / Play</a>
 						span.player
@@ -53,6 +61,9 @@ block content
 							option(value="com_id") Community id
 							option(value="avg_speed") Average speed 
 							option(value="num_stops") Number of stops
+							option(value="avg_speed_avg") Community avg speed
+							option(value="avg_speed_std") Community std speed
+							option(value="congested_sum") Community toal stops
 					
 					span.col-xs-12.col-sm-6 Size by: 
 						select(class="sort-by")
@@ -60,7 +71,10 @@ block content
 							option(value="avg_speed") Average speed
 							option(value="com_size") Community size 
 							option(value="degree") Degree 
-							option(value="com_score") Community score
+							option(value="com_score") Score
+							option(value="avg_speed_avg") Community avg speed
+							option(value="avg_speed_std") Community std speed
+							option(value="congested_sum") Community toal stops
 				
 			.row
 				#visualisation

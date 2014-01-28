@@ -66,6 +66,8 @@ window.onload = function() {
         // we're in an iframe! oh no! hide the twitter follow button
       }
 
+      getDistanceAndDurationGoogle();
+
       createChartObjects();
       loadFile(rootUrl + scenario + "/Miami-Trips-JuneJuly2013.tsv");
      
@@ -108,7 +110,7 @@ window.onload = function() {
               .call(context.rule())
 
 
-        draw_graph(["Miami-Trips-JuneJuly2013"]);
+        draw_graph("#demo", ["Miami-Trips-JuneJuly2013"]);
 
       }
 
@@ -136,8 +138,8 @@ window.onload = function() {
 	}
 
 
-    function draw_graph(data_list) {
-        d3.select("#demo")                 // Select the div on which we want to act           
+    function draw_graph(selector, data_list) {
+        d3.select(selector)                 // Select the div on which we want to act           
           .selectAll(".axis")              // This is a standard D3 mechanism to
           .data(["top"])                   // bind data to a graph. In this case
           .enter()                         // we're binding the axes "top" and "bottom".
@@ -481,4 +483,30 @@ window.onload = function() {
           timer = 0
         }
       }
+      function getDistanceAndDurationGoogle() {
+        var origin1 = new google.maps.LatLng(55.930385, -3.118425);
+        var origin2 = "Greenwich, England";
+        var destinationA = "Stockholm, Sweden";
+        var destinationB = new google.maps.LatLng(50.087692, 14.421150);
+
+        var service = new google.maps.DistanceMatrixService();
+        console.log("service", service)
+        service.getDistanceMatrix(
+          {
+            origins: [origin1, origin2],
+            destinations: [destinationA, destinationB],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.IMPERIAL, // METRIC
+            durationInTraffic: true,
+            avoidHighways: false,
+            avoidTolls: false
+          }, callback);
+
+        function callback(response, status) {
+          // See Parsing the Results for
+          // the basics of a callback function.
+          console.log("reposne", response, "status", status)
+        }
+      }
+
     }

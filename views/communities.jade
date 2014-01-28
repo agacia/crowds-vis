@@ -4,34 +4,116 @@ block styles
 	link(rel='stylesheet', href='/css/communities.css')
 
 block content
-	span.algorithm Algorithm: 
-		select(class="algorithm-select")
-			option(value="Leung") Leung
-			option(value="MobileLeungSDSD") Mobile Leung (SDSD) 
-			option(value="MobileLeungDSD") Mobile Leung (DSD)
-			option(value="SandSharc") Sand-Sharc 
-			option(value="EpidemicCommunityAlgorithm") Epidemic
+	#staticTooltips
+	span.project-info-icon.glyphicon.glyphicon-info-sign
+	.project-info 
+		.title 
+			h3 Project information
+			button(type="button", class="close glyphicon glyphicon-remove")
+		.body 
+			h4 Description
+			p Visualisation of evolution of communities in time and space.
+			p Each circle represents a community. The circle's size metric depends on the community size.
+			h4 Usage 
+			p 1. Select the label-propagation community detection algorithm.  
+			p 2. Select the coloring dependent on only community or add information about vehicle speed or congestion. Vehicle's speed is represented as a colored circle stroke (ranging from green to red). Congestion is represented by number of vehicle's stops. If a vehicle stops more than once on a link over the cycle course, the link is considered as congested. The circle stroke indicates how many times a vehicle stops on a link.  
+			p 3. Click Play or move timeline to see the evolution of communities.
+			p 4. Click on a circle to track the details of the community and its evolution.
+			p 5. Watch on the table the communities and their properties. 
+			p 6. Watch charts prepresenting graph's statistics over time and more.
+		.bg
 
-	<a class="playbutton play icon">Pause / Play</a>
-	
-	span.player
-		<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
-		<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
-	
-	span Time:
-		span(class="slider")
-	
-	span Sort by: 
-		select(class="sort-by")
-			option(value="com_size") Community size 
-			option(value="degree") Degree 
-			option(value="cos_score") Community score
-	
-	#container
-		
+	.container
+		.col-xs-12.col-sm-7.vis-column
+			#loaderVeh.loader
+				.loader-content
+					progress(class="progress-bar", value="10", max="100") 0 %
+					/// .loader-image
+					h4 Loading data...
+					h5.size
+			.dashboard
+				.row
+					span.algorithm.col-xs-12.col-sm-6 Algorithm: 
+						select(class="algorithm-select")
+							option(value="MobileSandSharc-avg-test") Test
+							option(value="MobileSandSharc-avg-cluster-1") Mobile Sharc
+							option(value="dynamic-10") Dynamic 10
+							option(value="threshold-0.5") Threshold 0.5
+							option(value="SandSharc") Sand Sharc
+					
+					span.col-xs-12.col-sm-6
+						<a class="playbutton play icon">Pause / Play</a>
+						span.player
+							<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+							<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+					
+						span.slider
+				.row
+					span.col-xs-12.col-sm-6 Color by: 
+						select(class="color-by")
+							option(value="com_id") Community id
+							option(value="avg_speed_avg") Community avg speed
+							option(value="avg_speed_std") Community std speed
+							option(value="congested_sum") Community toal stops
+					
+					span.col-xs-12.col-sm-6 Size by: 
+						select(class="sort-by")
+							option(value="range") Range
+							option(value="com_size") Community size 
+							option(value="None") None 
+				
+			.row
+				#visualisation
+
+		.col-xs-12.col-sm-5
+			#loaderCom.loader
+				.loader-content
+					progress(class="progress-bar", value="10", max="100") 0 %
+					/// .loader-image
+					h4 Loading data...
+					h5.size
+
+			#communities
+				.span.communities-stats
+					.num-communities
+					.monster-community
+				.span12.table-graph
+					table.table.table-hover.dc-monster-table#dc-monster-graph
+						thead
+							tr.header
+								th.com_id
+									a(type="button", class="sort glyphicon glyphicon-sort") Name
+								th.count 
+									a(type="button", class="sort glyphicon glyphicon-sort") Size
+								///th.speed_avg
+								///	a(type="button", class="sort glyphicon glyphicon-sort") Average speed
+								///th.speed_std
+								///	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed 
+								th.avg_speed_avg
+									a(type="button", class="sort glyphicon glyphicon-sort") Average avg speed
+								th.avg_speed_std
+									a(type="button", class="sort glyphicon glyphicon-sort") Stddev avg speed 
+								///th.num_stops_avg
+								///	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
+								th.congested_sum
+									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestions
+								th Color
+					
+				
+			.data-status 
+			h4 Time series
+			#charts
+				.chart#num-vehicles
+				.chart#num-stops
+				
+			#stats
+			.chart#hist-vehicles
 
 block scripts
 	<script src="js/communities.js"></script>
 	<script src="js/vendor/fisheye.js"></script>
 	<script src="js/vendor/crossfilter.min.js"></script>
 	<script src="js/vendor/dc.js"></script>
+	///<script src="js/vendor/gauss.js"></script>
+	<script src="js/tooltip.js"></script>
+	<script src="js/vendor/underscore.js"></script>

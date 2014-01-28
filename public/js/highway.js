@@ -3,30 +3,40 @@ window.onload = function() {
         , vis = d3.select('body #container').append('svg').attr('class', 'vis')
           .style({ width: width + 'px', height: height + 'px' })
         , node, max, margin = 10, max_area = 800, tooltip
+        , min_width = 600
+        , min_height = 200
         , toolbar_height = 60
         , margin_top = (width > 450) ? 0 : 5
-        , margin_top = 0, margin_bottom  = 0
+        , margin_top = 0, margin_bottom  = 10
         , areaRatio = 1
         , steps_x = 100, steps_y = 28
         , calcBestArea = function(areaRatio){
           var r1 = (width ) 
             , r2 = (height)
             , r = r1 > r2 ? r2 : r1
-            r *= 1
             w = r1;
             h = areaRatio * r1;
             if (h > r2) {
               w = r;
               h = areaRatio * r;
             }
-            // h += toolbar_height
-            d3.select('body #container .vis').style({ width: w + 'px', height: (h+toolbar_height) + 'px' })
+            if ( w < min_width) {
+              w = min_width
+              r = w
+              h = areaRatio * r;
+            }
+            if (h < min_height) {
+              w = h / areaRatio
+              r = h
+              h = min_height;
+            }
+            d3.select('.vis').style({ width: w+ 'px', height: h+ 'px'})
             return {"r":r, "width":w, "height":h}
         }
-        , max_area = calcBestArea(areaRatio).r
-        , areaScale = d3.scale.linear().range([0, max_area])
-        , xScale = d3.scale.linear().range([margin, max_area - margin])
-        , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom - margin_top])
+        , max_area = calcBestArea(areaRatio)
+        , areaScale = d3.scale.linear().range([0, max_area.r])
+        , yScale = d3.scale.linear().range([margin_top, max_area.height - margin_bottom - margin_top])
+        , xScale = d3.scale.linear().range([margin, max_area.width - margin])
         , maxY = 0
         , areaToRadius = function(area, scale){ return Math.sqrt( scale * area / Math.PI) }
         , fisheye = null
@@ -105,6 +115,7 @@ window.onload = function() {
       tip.show();
 
       if ( window.self !== window.top ){
+        $("wrapper").addClass('in-frame')
         // we're in an iframe! oh no! hide the twitter follow button
       }
       loadFiles(rootUrl, scenario, algorithm, filename);
@@ -133,7 +144,7 @@ window.onload = function() {
         margin_bottom = 20;
         areaRatio = 1;
         if (scenario == "Highway" || scenario=="Split") {
-          areaRatio = 0.25;
+          areaRatio = 0.2;
         }
         if (scenario == "Box" || scenario=="Cross" || scenario=="Manhattan") {
           areaRatio = 1;
@@ -240,6 +251,7 @@ window.onload = function() {
         fisheyeEffect(vis)
       }      
       function updateXScale(metric) {
+        // yScale = d3.scale.linear().range([margin_top, max_area.h - margin_bottom - margin_top])
         maxX = 0;
         for (var i = firstStep; i < lastStep; i += stepSize)  {
            maxXStep = d3.max(vehicles[i], function(d){ return d[metric] })
@@ -399,21 +411,22 @@ window.onload = function() {
       $('.sort-by').on('change', function(){
         var newMetric = $(this).val()
         if (sortMetric === newMetric) return
-        sortMetric = newMetric
-        updateAreaScale(sortMetric)
-        node.transition().duration(1000).call(updatePos)
+        sortMetric = newMetric;
+        updateAreaScale(sortMetric);
+        pause();
+        node.transition().duration(1000).call(updatePos);
       })
       $('.algorithm-select').on('change', function(){
-        var newAlgorithm = $(this).val()
+        var newAlgorithm = $(this).val();
         if (algorithm === newAlgorithm) return
-        algorithm = newAlgorithm
+        algorithm = newAlgorithm;
         pause();
         loadFiles(rootUrl, scenario, algorithm, filename);
       })
       $('.scenario-select').on('change', function(){
         var newScenario = $(this).val()
         if (scenario === newScenario) return
-        scenario = newScenario
+        scenario = newScenario;
         pause();
         loadFiles(rootUrl, scenario, algorithm, filename);
       })
@@ -516,13 +529,13 @@ window.onload = function() {
       $('.playbutton').click(function(){
         togglePlay();
         if ($(this).hasClass("play")) {
-          $(this).addClass("pause");
-          $(this).removeClass("play");
+          // $(this).addClass("pause");
+          // $(this).removeClass("play");
           play();
         }
         else {
-          $(this).addClass("play");
-          $(this).removeClass("pause");
+          // $(this).addClass("play");
+          // $(this).removeClass("pause");
           pause();
         }
         return false;
@@ -540,6 +553,8 @@ window.onload = function() {
         step += stepSize;
         onStepUpdated();
         slider.slider({value :step });
+        $('.playbutton').addClass("pause");
+          $('.playbutton').removeClass("play");
         timer = setTimeout(function() {  
           play();
         }, timerDelay);
@@ -548,6 +563,8 @@ window.onload = function() {
         if (timer) {
           clearTimeout(timer);
           timer = 0
+          $('.playbutton').addClass("play");
+          $('.playbutton').removeClass("pause");
         }
       }
     }
