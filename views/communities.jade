@@ -6,20 +6,20 @@ block styles
 block content
 	#staticTooltips
 	span.project-info-icon.glyphicon.glyphicon-info-sign
-	.project-info 
-		.title 
+	.project-info
+		.title
 			h3 Project information
 			button(type="button", class="close glyphicon glyphicon-remove")
-		.body 
+		.body
 			h4 Description
 			p Visualisation of evolution of communities in time and space.
 			p Each circle represents a community. The circle's size metric depends on the community size.
-			h4 Usage 
-			p 1. Select the label-propagation community detection algorithm.  
-			p 2. Select the coloring dependent on only community or add information about vehicle speed or congestion. Vehicle's speed is represented as a colored circle stroke (ranging from green to red). Congestion is represented by number of vehicle's stops. If a vehicle stops more than once on a link over the cycle course, the link is considered as congested. The circle stroke indicates how many times a vehicle stops on a link.  
+			h4 Usage
+			p 1. Select the label-propagation community detection algorithm.
+			p 2. Select the coloring dependent on only community or add information about vehicle speed or congestion. Vehicle's speed is represented as a colored circle stroke (ranging from green to red). Congestion is represented by number of vehicle's stops. If a vehicle stops more than once on a link over the cycle course, the link is considered as congested. The circle stroke indicates how many times a vehicle stops on a link.
 			p 3. Click Play or move timeline to see the evolution of communities.
 			p 4. Click on a circle to track the details of the community and its evolution.
-			p 5. Watch on the table the communities and their properties. 
+			p 5. Watch on the table the communities and their properties.
 			p 6. Watch charts prepresenting graph's statistics over time and more.
 		.bg
 
@@ -27,7 +27,7 @@ block content
 		
 		.dashboard
 			.row
-				span.algorithm.col-xs-12.col-sm-4 Algorithm: 
+				span.algorithm.col-xs-12.col-sm-4 Algorithm:
 					select(class="algorithm-select")
 						option(value="30012014/test/") Test
 						option(value="30012014/simn/reduced_") Sim_n
@@ -39,40 +39,39 @@ block content
 						option(value="threshold-0.3/") Threshold 0.3
 						option(value="threshold-0.4/") Threshold 0.4
 						option(value="threshold-0.5/") Threshold 0.5
-				span.col-xs-12.col-sm-3 Color by: 
+				span.col-xs-12.col-sm-3 Color by:
 					select(class="color-by")
 						option(value="com_id") Community id
-						option(value="avg_speed") Average speed 
+						option(value="avg_speed") Average speed
 						option(value="num_stops") Number of stops
 						option(value="avg_speed_avg") Community avg speed
 						option(value="avg_speed_std") Community std speed
 						option(value="congested_sum") Community toal stops
-				span.col-xs-12.col-sm-3 Size by: 
+				span.col-xs-12.col-sm-3 Size by:
 					select(class="sort-by")
-						option(value="None") None 
+						option(value="None") None
 						option(value="avg_speed") Average speed
-						option(value="com_size") Community size 
-						option(value="degree") Degree 
+						option(value="com_size") Community size
+						option(value="degree") Degree
 						option(value="com_score") Score
 						option(value="avg_speed_avg") Community avg speed
 						option(value="avg_speed_std") Community std speed
 						option(value="congested_sum") Community toal stops
-			.row	
+			.row
 				span.col-xs-12.col-sm-6
 					<a class="playbutton play icon">Pause / Play</a>
 					span.player
 						<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
 						<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
 					span.slider
-				
-		
-		.col-xs-12.col-sm-7.vis-column	
+
+		.col-xs-12.col-sm-7.vis-column
 			#loaderVeh.loader
 				.loader-content
 					progress(class="progress-bar", value="10", max="100") 0 %
 					//- .loader-image
 					h4 Loading data...
-					h5.size	
+					h5.size
 			.row
 				#visualisation
 				.legend
@@ -97,29 +96,28 @@ block content
 							tr.header
 								th.com_id
 									a(type="button", class="sort glyphicon glyphicon-sort") Name
-								th.count 
+								th.count
 									a(type="button", class="sort glyphicon glyphicon-sort") Size
 								//-th.speed_avg
 								//-	a(type="button", class="sort glyphicon glyphicon-sort") Average speed
 								//-th.speed_std
-								//-	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed 
+								//-	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed
 								th.avg_speed_avg
 									a(type="button", class="sort glyphicon glyphicon-sort") Average avg speed
 								th.avg_speed_std
-									a(type="button", class="sort glyphicon glyphicon-sort") Stddev avg speed 
+									a(type="button", class="sort glyphicon glyphicon-sort") Stddev avg speed
 								//-th.num_stops_avg
 								//-	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
 								th.congested_sum
 									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestion reports
 								th Color
-					
-				
-			.data-status 
+
+			.data-status
 			//-h4 Time series
 			//-#charts
 			//-	.chart#num-vehicles
 			//-	.chart#num-stops
-				
+
 			#stats
 			.chart#hist-vehicles
 
