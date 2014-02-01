@@ -445,23 +445,29 @@ window.onload = function() {
           if (metric != "com_id") {
             var maxVal = d3.max(data, function(d){ return d[metric] })
             var minVal = d3.min(data, function(d){ return d[metric] })
-            colorScales[metric].domain([minVal, maxVal])  
             var colors = []
             var scaleLen = colorScales[metric].range().length;
             if (scaleLen < 9) {
               scaleLen = 9
             }
+            var maxValue = maxVal;
+            if (metric === "avg_speed_avg") {
+              // todo
+              maxVal = 15;
+            }
+            colorScales[metric].domain([minVal, maxVal])  
+            
             var interval = (maxVal - minVal)/scaleLen;
             for (var i in d3.range(scaleLen)) {
               var value = minVal + i * interval;
               colors.push({"value":Math.round(value), "color":colorScales[metric](value)})
             }
-            createLegend(metric, colors)
+            createLegend(metric, colors, maxValue)
           }
         }
       }
 
-      function createLegend(metric, colors) {
+      function createLegend(metric, colors, maxValue) {
         var legend = d3.select(".legend").append("div")
           .attr("class", "legend-item " + metric)
         legend.append('span')
@@ -479,6 +485,8 @@ window.onload = function() {
             .style('display', "inline-block")
             .style('background-color', function(d) { return d.color })
             .text(function(d) { return d.value })
+          legend.append('span')
+            .text("Max: " + maxValue)
       }
 
       $('.color-by').on('change', function(){
