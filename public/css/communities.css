@@ -143,3 +143,14 @@ text-shadow: 0 1px 0 #fff;
 	overflow: scroll; 
 	height: 600px;
 }
+
+.custom-circle {
+	width: 10px;
+	height: 10px;
+	position: 'absolute';
+	background-color: red
+}
+.circle-container {
+	position: absolute;
+}
+

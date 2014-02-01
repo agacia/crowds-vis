@@ -1,14 +1,22 @@
 window.onload = function() {
   var 
-        width = parseInt(d3.select(".vis-column").style("width")),
-        height = areaRatio * width
-        , vis = d3.select('body #visualisation').append('svg').attr('class', 'vis')
-          .style({ width: '100%', height: height + 'px' })
-        , node, max, margin = 0, max_area = 800, tooltip
-        , margin_top = 0, margin_bottom  = 0
-        , areaRatio = 1
-        , steps_x = 100, steps_y = 28
-        , calcBestArea = function(areaRatio){
+      width = parseInt(d3.select(".vis-column").style("width"))
+      , height = width
+      // , sketch = d3.select("body #visualisation").append("div").attr('class','circle-container')
+      // , sketch = d3.select("body #visualisation").append("custom:sketch")
+      //   .attr("width", width)
+      //   .attr("height", height)
+      //   .style({ width: width+ 'px', height: height+ 'px'})
+      , canvas = d3.select("body #visualisation")
+          .attr("width", width)
+          .attr("height", height)
+          .append('canvas').node()
+      
+      , node, max, margin = 0, max_area = 800, tooltip
+      , margin_top = 0, margin_bottom  = 0
+      , areaRatio = 1
+      , steps_x = 100, steps_y = 28
+      , calcBestArea = function(areaRatio){
           var r1 = (width ) 
             , r2 = (height)
             , r = r1 > r2 ? r2 : r1
@@ -20,75 +28,112 @@ window.onload = function() {
             }
             d3.select('.vis').style({ width: w+ 'px', height: h+ 'px'})
             return {"r":r, "width":w, "height":h}
-        }
-        , max_area = calcBestArea(areaRatio).r
-        , areaScale = d3.scale.linear().range([0, max_area])
-        , xScale = d3.scale.linear().range([margin, max_area - margin])
-        , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom - margin_top])
-        , maxY = 0
-        , areaToRadius = function(area, scale){ return Math.sqrt( scale * area / Math.PI) }
-        , fisheye = null
-        , fisheye = d3.fisheye.circular().radius(20).distortion(5)
-        , colorScales = {
-          "com_id": d3.scale.category20(),
-          "avg_speed": d3.scale.linear().range(["red","green"]),
-          "speed": d3.scale.linear().range(["red","green"]),
-          "avg_speed_avg": d3.scale.linear().range(["red","green"]),
-          "avg_speed_std": d3.scale.linear().range(["red","green"]),
-          "num_stops": d3.scale.linear().range(["green","#FF530D"]),
-          "congested_sum": d3.scale.linear().range(["green","red"])}
-        , colorMetric = 'com_id'
-        , sortMetric = $('.sort-by').val()
-        , colorMetric = $('.color-by').val()
-        , algorithm = $('.algorithm-select').val()
-        , firstStep = 0, step = 0, lastStep = 0, stepSize = 0
-        , id = 0, order = 0
-        , radius = function(d) { 
-            var metric = sortMetric
-            var scale = 1;
-            if (metric === "None") {
-              return 5;
-            }          
-            return areaToRadius(areaScale(d[metric]), scale) 
+      }
+      , max_area = calcBestArea(areaRatio).r
+      , areaScale = d3.scale.linear().range([0, max_area])
+      , xScale = d3.scale.linear().range([margin, max_area - margin])
+      , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom - margin_top])
+      , maxY = 0
+      , areaToRadius = function(area, scale){ return Math.sqrt( scale * area / Math.PI) }
+      , fisheye = null
+      , fisheye = d3.fisheye.circular().radius(20).distortion(5)
+      , colorScales = {
+        "com_id": d3.scale.category20(),
+        "avg_speed": d3.scale.linear().range(["red","green"]),
+        "speed": d3.scale.linear().range(["red","green"]),
+        "avg_speed_avg": d3.scale.linear().range(["red","green"]),
+        "avg_speed_std": d3.scale.linear().range(["red","green"]),
+        "num_stops": d3.scale.linear().range(["green","#FF530D"]),
+        "congested_sum": d3.scale.linear().range(["green","red"])}
+      , colorMetric = 'com_id'
+      , sortMetric = $('.sort-by').val()
+      , colorMetric = $('.color-by').val()
+      , algorithm = $('.algorithm-select').val()
+      , firstStep = 0, step = 0, lastStep = 0, stepSize = 0
+      , id = 0, order = 0
+      , radius = function(d) { 
+          var metric = sortMetric
+          if (metric === "None") {
+            return 5;
           }
-        , dataKey = function(d){ return d.com_id }
-        , stepsOffset = 841
-        , formatStep = function(step) {
-          var seconds = step + stepsOffset
-          if ((lastStep - firstStep) > 120) {
-           return (seconds/60).toFixed(2) + " min"
-          }
-          return seconds + " s"
+          var scale = 1;
+          return areaToRadius(areaScale(d[metric]), scale) 
         }
-        , topNode = null
-        , rootUrl = 'data/'
-        , scenario = "Manhattan"
-        , slider
-        , dateLabel = $("<div/>")
-                    .css({ position : 'absolute' , top : 0, left : 0, width: "60px"})
-                    .text(formatStep(step))
-        , timer
-        , timerDelay = 300
-        , trackedNode = 0
-        , trackedCommunityId = 0
-        , staticTooltips = {}
-        , communitiesDimensions = {}
-        , monsterSortMetric = "count"
-        , tip = new InfoTooltip()
+      , dataKey = function(d){ return d.node_id }
+      , format = function(d) { // when read cvs
+          var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops', 'is_originator'];
+          numKeys.forEach(function(key){ d[key] = Number(d[key]) })
+          d.id = d.node_id;
+          return d;
+      }
+      , formatGroup = function(d){ // when read cvs
+          var numKeys = ['step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size'];
+          numKeys.forEach(function(key){ d[key] = Number(d[key]) })
+          d.order = order++;
+          return d;
+      }
+      , stepsOffset = 841
+      , formatStep = function(step) {
+        var seconds = step + stepsOffset
+        if ((lastStep - firstStep) > 120) {
+         return (seconds/60).toFixed(2) + " min"
+        }
+        return seconds + " s"
+      }
+      , topNode = null
+      , rootUrl = 'data/'
+      , scenario = "Manhattan"
+      , slider
+      , dateLabel = $("<div/>")
+                  .css({ position : 'absolute' , top : 0, left : 0, width: "60px"})
+                  .text(formatStep(step*stepSize))
+      , vehicles = {}
+      , timer
+      , timerDelay = 100
+      , trackedNode = 0
+      , trackedCommunityId = 0
+      , staticTooltips = {}
+      , communities = {}
+      , monsterSortMetric = "count"
+      , tip = new InfoTooltip()
+      // , stage, layers // kinetic
 
       if ( window.self !== window.top ){
         // we're in an iframe!
       }
 
-      tip(".project-info")
-      tip.show();
-      
-      loadFile(rootUrl + scenario + "/" + algorithm + "/communities_pandas.tsv", "#loaderCom", gotCommunities);
+      // Register the "custom" namespace prefix for our custom elements.
+      d3.ns.prefix.custom = "http://github.com/mbostock/d3/examples/dom";
+
+      init();
       createstaticTooltips(); 
+
+      function init() {
+        tip(".project-info")
+        tip.show();
+        pause()
+        var context = canvas.getContext("2d");
+        clear(context);
+        d3.select("#staticTooltips").attr('display', 'none')
+        // loadFile(rootUrl + scenario + "/" + algorithm + "communities.csv", "#loaderVeh", gotVehicles);
+        // loadFile(rootUrl + scenario + "/" + algorithm + "communities_pandas.tsv", "#loaderCom", gotCommunities);
+        var q = queue(1);
+        q.defer(loadFile, rootUrl + scenario + "/" + algorithm + "communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
+        q.defer(loadFile, rootUrl + scenario + "/" + algorithm + "communities.csv", "#loaderVeh") // , gotVehicles) 
+        q.awaitAll(gotAllData);
+
+      }
+      function gotAllData(error, results) {
+        tip.hide();
+        gotCommunities(error, results[0]);
+        gotVehicles(error, results[1]);
+      }
+      
 
       function loadFile(url, loader, cb) {
         $(loader).show()
         var xhr = d3.tsv(url)
+          .row(format)
           .on("progress", function(pe) { 
             if(pe) {
               var total = Math.round(d3.event.total/1024)
@@ -110,74 +155,214 @@ window.onload = function() {
             $('.error').html("");
             // d3.select('body').selectAll('.chart').selectAll().remove()
             d3.select(".data-status").html("Loaded " + data.length + " rows of data...")
-            cb(data)
+            cb(null, data)
           })
           .on("error", function(error) { 
             $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
           })
           .get();
       }
-      function gotCommunities(data) {
+      function gotCommunities(error, data) {
         // console.log("got communities", data)
         data = data.map(function(d) {
           com = {}
           com.step = +d["('step', '')"]
           com.com_id = +d["('com_id', '')"]
-          com.count = +d["('degree', 'size')"]
-          com.range = +d["('range', '')"] / 2
-          com.speed_avg = +d["('speed', 'average')"]
+          com.count = +d["('com_size', 'size')"]
+          com.range = +d["('range', '')"]
+          com.speed_avg = +d["('speed', 'mean')"]
           com.speed_min = +d["('speed', 'amin')"]
           com.speed_max = +d["('speed', 'amax')"]
           com.speed_std = +d["('speed', 'std')"]
-          com.avg_speed_avg = +d["('avg_speed', 'average')"]
-          com.avg_speed_min = +d["('avg_speed', 'amin')"]
+          com.avg_speed_avg = +d["('avg_speed', 'mean')"]
           com.avg_speed_max = +d["('avg_speed', 'amax')"]
           com.avg_speed_std = +d["('avg_speed', 'std')"]
           com.num_stops_sum = +d["('num_stops', 'sum')"]
-          com.num_stops_avg = +d["('num_stops', 'average')"]
-          com.num_stops_min = +d["('num_stops', 'amin')"]
-          com.num_stops_max = +d["('num_stops', 'amax')"]
-          com.num_stops_std = +d["('num_stops', 'std')"]
+          com.num_stops_avg = +d["('num_stops', 'mean')"]
           com.congested_sum = +d["('congested', 'sum')"]
-          com.x = +d["('x', 'amax')"] + (+d["('x', 'amax')"] - (+d["('x', 'amin')"]))
-          com.y = +d["('y', 'amax')"] + (+d["('y', 'amax')"] - (+d["('y', 'amin')"]))
           return com;
         })
+        console.log(data)
+        communities= d3.nest()
+          .key(function(d) { return d.step; })
+          .entries(data);
 
-        var cf = crossfilter(data);
-        // time dimension
-        var timeDimension = cf.dimension(function(d) {
-          return d.step;
+        createMonsters(step);
+      }
+
+      function gotVehicles(error, data) {
+        data.forEach(function(d){
+          d.step = +d.step;
+          d.avg_speed = +d.avg_speed
         })
-        var steps = timeDimension.group().reduceCount().all();
-        if (steps.length > 0) {
-          firstStep = steps[0].key;
-          lastStep = steps[steps.length-1].key;
+        vehicles = d3.nest()
+          .key(function(d) { return d.step; })
+          .entries(data);
+
+        if (vehicles.length > 0) {
+          firstStep = +vehicles[0].key;
+          lastStep = +vehicles[vehicles.length-1].key;
           step = firstStep;
         }
         stepSize = 1;
-        initialiseSlider(firstStep, lastStep, stepSize, onStepUpdated)
-        communities = {}
-        for (var i in steps) {
-          communities[i] = timeDimension.filter(i).top(Infinity)
+        if (vehicles.length > 1) {
+          stepSize = +vehicles[1].key - firstStep;
         }
-        communitiesDimensions = {}
-        for (var i in steps) {
-          var dim = crossfilter(communities[i]).dimension(function(d) {
-            return d.count
-          });
-          communitiesDimensions[i] =  dim
+        initialiseSlider(firstStep/stepSize, (lastStep-1)/stepSize, stepSize/stepSize, onStepUpdated)
+         
+        canvas.style.position = "relative";
+        var root = $('body #visualisation');
+        canvas.width = width;
+        canvas.height = height;
+        
+        for (time in vehicles) {
+          var stepCommunities = communities[time].values;
+          vehicles[time].values.forEach(function(d) {
+            var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
+            d["avg_speed_std"] = com[0].avg_speed_std;
+            d["avg_speed_avg"] = com[0].avg_speed_avg;
+            d["congested_sum"] = com[0].congested_sum
+          })
         }
-        timeDimension.filter(null);
-        createMonsters(step)
-    
+        updateColorScales(data);
         updateMaxArea(areaRatio);
-        updateXScale("x");
-        updateYScale("y");
-
-        showCommunities(communities[step]);
+        updateAreaScales(data);
+        drawVehicles(canvas, step);
       }
 
+      /* Test of kinetic performance - too slow */
+      function testKinetic() {
+        console.log("initKineticStage...")
+        initKineticStage();
+        console.log("drawVehiclesKinetic...")
+        drawVehiclesKinetic(step);
+      }
+
+      function initKineticStage() {
+        stage = new Kinetic.Stage({
+          container: 'kinetic-container',
+          width: width,
+          height: height
+        });
+        layers = { 
+          "circles": new Kinetic.Layer(),
+          "tooltip" : new Kinetic.Layer()
+        };
+
+        var tooltip = new Kinetic.Text({
+          text: "",
+          fontFamily: "Calibri",
+          fontSize: 12,
+          padding: 5,
+          visible: false,
+          fill: "black",
+          opacity: 0.75,
+          textFill: "white"
+        });
+        layers['tooltip'].add(tooltip);
+        stage.add(layers['tooltip']);
+      }
+
+      function drawVehiclesKinetic(step) {
+        var circlesLayer = layers['circles'];
+        circlesLayer.destroy();
+        var tooltipLayer = layers['tooltip'];
+        var tooltip = tooltipLayer.children[0]
+        for (v in vehicles[step]) {( function(st, lay) {
+          var vehicle = vehicles[step][v];
+          var x = xScale(vehicle.x);
+          var y = yScale(vehicle.y);
+          var color = colorScales[colorMetric](vehicle[colorMetric]) 
+          var r = radius(vehicle)
+          var circle = new Kinetic.Circle({
+              x: x,
+              y: y,
+              radius: r,
+              fill: color
+            });
+          circle.on("mousemove", function() {
+              // update tooltip
+              var mousePos = st.getPointerPosition();
+              tooltip.setPosition(mousePos.x + 5, mousePos.y + 5);
+              tooltip.setText("node: " + vehicle['node_id'] + ", community: " + vehicle['com_id'] + ", avg speed: " + vehicle['avg_speed']);
+              tooltip.show();
+              tooltipLayer.draw();
+            });
+
+            circle.on("mouseout", function() {
+              tooltip.hide();
+              tooltipLayer.draw();
+            });
+
+            circlesLayer.add(circle);
+          })(stage, layers);
+        }
+
+        stage.add(layers['circles']);
+      }
+
+      function drawVehicles(canvas, step) {
+        context = canvas.getContext("2d");
+        clear(context);
+        d3.selectAll(".custom-circle").remove()
+        for (v in vehicles[step].values) {
+          var vehicle = vehicles[step].values[v];
+          var x = xScale(vehicle.x);
+          var y = yScale(vehicle.y);
+          var color = colorScales[colorMetric](vehicle[colorMetric]) 
+          var r = radius(vehicle)
+          // console.log("vehicle", vehicle, "r", r)
+          // sketch.append("custom:circle")
+          // sketch.append("div")
+            // .attr('class', 'custom-circle')
+            // .attr("x", x)
+            // .attr("y", y)
+            // .attr("radius", r)
+            // .attr("strokeStyle", color)
+            // .attr("fillStyle", color)
+            // .style('top', x + 'px') // cant set style propety of custom objects
+            // .style('left', y +'px')
+            // .style('position', 'absolute')
+            // .on('mousemove', function(e) { console.log("mousemove")})
+          // .transition()
+          //   .duration(2000)
+          //   .ease(Math.sqrt)
+          //   .attr("radius", 200)
+          //   .attr("strokeStyle", "white")
+          //   .remove();
+          var circle = {x: x, y: y, r: r, strokeStyle: color, fillStyle: color};
+          drawCircle(context, circle)
+        }
+        // Clear the canvas and then iterate over child elements.
+        function redraw() {
+          // clear(context);
+          canvas.width = canvas.getAttribute("width");
+          canvas.height = canvas.getAttribute("height");
+          // for (var child = root.firstChild; child; child = child.nextSibling) draw(child);
+          var circle = {x: 10, y: 10, r: 10, strokeStyle: "red"};
+          draw(context, circle);
+        }
+      };
+
+      function clear(ctx) {
+        // ctx.beginPath();
+        // ctx.clearRect(0, 0, width, height);
+        // ctx.closePath();
+        canvas.width = canvas.width;
+      }
+
+      // For now we only support circles with strokeStyle.
+      // But you should imagine extending this to arbitrary shapes and groups!
+      function drawCircle(context, element) {
+        context.strokeStyle = element.strokeStyle;
+        context.fillStyle = element.fillStyle;
+        context.globalAlpha = 0.5;
+        context.beginPath();
+        context.arc(element.x, element.y, element.r, 0, 2 * Math.PI);
+        context.stroke();
+        context.fill();
+      }
+      
       function initialiseSlider(firstStep, lastStep, stepSize, callback) {
         $(".slider").slider()
           .find(".ui-slider-handle")
@@ -194,200 +379,146 @@ window.onload = function() {
             })
       }
       function onStepUpdated() {
-        showCommunities(communities[step])
-        dateLabel.text(formatStep(step))        
-        updatestaticTooltips(step);
+        drawVehicles(canvas, step)
+        dateLabel.text(formatStep(step*stepSize))        
         createMonsters(step);
       }
+
+      function updateAreaScales(data) {
+        minX = d3.min(data, function(d) {return d.x; })
+        maxX = d3.max(data, function(d) {return d.x; })
+        minY = d3.min(data, function(d) {return d.y; })
+        maxY = d3.max(data, function(d) {return d.y; })
+        xScale.domain([minX,maxX])
+        yScale.domain([minY,maxY])
+      }
       
-      function createChart(selection, xLabel, yLabel, dimension, group, keyAccessor, valueAccessor, xMin, xMax) {
-        var chart = dc.lineChart(selection);
-        chart
-          .width(580)
-          .height(160)
-          .x(d3.scale.linear().domain([xMin,xMax]))
-          // .interpolate('step-before')
-          .renderArea(false)
-          .brushOn(false)
-          // .renderDataPoints(false)
-          .yAxisLabel(yLabel)
-          .dimension(dimension)
-          // .dimension(group)
-          // .keyAccessor(function(d) { return d.key * groupSize; })
-          .group(group)
-          .valueAccessor(function (d) {
-            return d.value[valueAccessor];
-          })
-          .renderTitle(true)
-          .title(function(d){
-            return "Step: " + d.key
-            + "\n" + valueAccessor + ": " + d.value[valueAccessor];
-            })
-          // .title(function(p) {
-          //     return 
-          //         "Step: " + numberFormat(p[keyAccessor]) + "\n"
-          //         + "Value : " + numberFormat(p.value[valueAccessor]) + "\n"
-          // })
-          .renderLabel(true)
-          .transitionDuration(1500)
-          .elasticY(true)
-
-        chart.margins().left = 50;
-        chart.render();
-        // renderlet function
-        chart.renderlet(function(chart){
-            // mix of dc API and d3 manipulation
-            d3.select(".charts-status").style("display", "none");
-            dc.events.trigger(function(){
-              // focus some other chart to the range selected by user on this chart
-              // someOtherChart.focus(chart.filter());
-            });
-            // moveChart.filter(chart.filter());
-        });
-      }
-      function showCommunities(data) { 
-        if (!data) {
-          return;
-        }
-        updateAreaScale(sortMetric)
-        var exitNodes = vis.selectAll('.node').data(data, dataKey).exit()
-        exitNodes.remove();
-        newNodes = vis.selectAll('.node').data(data, dataKey)
-          .enter()
-            .append('g')
-            .attr('class', 'node')  
-        newNodes.on('click', function(){
-          var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
-            , sel = d3.select(this)
-          if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
-          var startTracking = d3.select(this).classed('selected')
-          if (startTracking) {
-            d3.select('.staticTooltip.vehicle').style('display', 'block')
-            d3.select('.staticTooltip.community').style('display', 'block')
-            trackedNode = sel
-            trackedCommunityId = sel.data()[0].com_id
-            updatestaticTooltips(step);
-          }
-          else {
-            trackedNode = 0
-            d3.select('.staticTooltip.vehicle').style('display', 'none')
-          }
-        })
-        newNodes.append('circle')
-        node = vis.selectAll('.node')
-        node
-          .call(updatePos) 
-          .call(updateColor)
-        fisheyeEffect(vis)
-      }
-      function updateXScale(metric) {
-        maxX = 0;
-        for (var i = firstStep; i < lastStep; i += stepSize)  {
-           maxXStep = d3.max(communities[i], function(d){ return d[metric] })
-           if (maxXStep > maxX) {
-            maxX = maxXStep;
-           }
-        }
-        console.log("xmin", 0, "xmax", maxX, "xScale(maxx)", xScale(maxX))
-
-        xScale.domain([0, maxX])
-      }
-      function updateYScale(metric) {
-        // y range 9717.82 - 37499.01 
-        maxY = 0;
-        for (var i = firstStep; i < lastStep; i += stepSize)  {
-           maxYStep = d3.max(communities[i], function(d){ return d[metric] })
-           if (maxYStep > maxY) {
-            maxY = maxYStep;
-           }
-        }
-
-        console.log("minY", 0, "maxY", maxY,  "yScale(maxY)", yScale(maxY))
-        yScale.domain([0, maxY])
-      }
-      function updateSpeedScale(metric) {
-        // y range 9717.82 - 37499.01 
-        maxY = 0;
-        for (var i = firstStep; i < lastStep; i += stepSize)  {
-           maxYStep = d3.max(communities[i], function(d){ return d[metric] })
-           if (maxYStep > maxY) {
-            maxY = maxYStep;
-           }
-        }
-        // console.log("max speed ever", metric, maxY)
-        colorScales["avg_speed"].domain([0, maxY])
-      }
       function updateAreaScale(metric){
         if (metric === "None") {
           areaScale.domain([0, 10])
-        } else {
-          areaScale.domain([0, d3.max(communities[step],function(d){ return d[metric] }) ])
+        } else if (vehicles && vehicles[step].values.length > 0) {
+          areaScale.domain([0, d3.max(vehicles[step].values,function(d){ return d[metric] }) ])
         }
       }
-      function updateColorScale(metric){
-        for (var i in colorScales) {
-          // if (i !== "avg_speed") {
-            if (communities && communities[step].length > 0) {
-              if (metric in communities[step][0]) {
-                colorScales[i].domain([0, d3.max(communities[step],function(d){ return d[metric] }) ])
-              }
-              
+      function updateColorScales(data) {
+        d3.selectAll(".legend-item").remove();
+
+        for (var metric in colorScales) {
+          if (metric != "com_id") {
+            var maxVal = d3.max(data, function(d){ return d[metric] })
+            var minVal = d3.min(data, function(d){ return d[metric] })
+            colorScales[metric].domain([minVal, maxVal])  
+            var colors = []
+            var scaleLen = colorScales[metric].range().length;
+            if (scaleLen < 9) {
+              scaleLen = 9
             }
+            var interval = (maxVal - minVal)/scaleLen;
+            for (var i in d3.range(scaleLen)) {
+              var value = minVal + i * interval;
+              colors.push({"value":Math.round(value), "color":colorScales[metric](value)})
+            }
+            createLegend(metric, colors)
+          }
         }
+      }
+
+      function createLegend(metric, colors) {
+        var legend = d3.select(".legend").append("div")
+          .attr("class", "legend-item " + metric)
+        legend.append('span')
+          .attr('class','title')
+          .text(metric)
+        legend.append('span')
+          .attr('class','colors')
+        legend.selectAll('.color-item')
+          .data(colors) 
+          .enter()
+          .append('span') 
+            .attr('class', 'color-item')
+            .style('width', 30+"px")
+            .style('height', 20+"px")
+            .style('display', "inline-block")
+            .style('background-color', function(d) { return d.color })
+            .text(function(d) { return d.value })
+      }
+      function initialiseMonsterTracker() {
+        // d3.select('.monsters.tracker .icon').append('svg').append('g').attr('class', 'node monster-community') 
+        //       .attr('transform', 'translate(' + 10 + ',' + 8 + ')')
+        //       .append('circle').attr('r', 5)
+        // $("#trackMonsterToggle").prop('checked') ? $('.monsters.tracker .icon').show() : $('.monsters.tracker .icon').hide();
+        // $("#trackMonsterToggle").on('click', function(d) {
+        //   $("#trackMonsterToggle").prop('checked') ? $('.monsters.tracker .icon').show() : $('.monsters.tracker .icon').hide();
+        //   updateMonsterCommunity()
+        // });
+        // d3.select('.originators.tracker .icon').append('svg').append('g').attr('class', 'node originator') 
+        //       .attr('transform', 'translate(' + 10 + ',' + 8 + ')')
+        //       .append('circle').attr('r', 5)
+        // $("#showOriginatorsToggle").prop('checked') ? $('.originators.tracker .icon').show() : $('.originators.tracker .icon').hide();
+        // $("#showOriginatorsToggle").on('click', function(d) {
+        //   var trackOriginators = $("#showOriginatorsToggle").prop('checked') 
+        //   if (trackOriginators) {
+        //     $('.originators.tracker .icon').show() 
+        //     vis.selectAll(".node").classed("originator", function(d) {
+        //       return d.is_originator;
+        //     })
+        //   } 
+        //   else {
+        //     $('.originators.tracker .icon').hide();
+        //     vis.selectAll(".node").classed("originator", false)
+        //   }
+        // });
+        
       }
       function orderValue(p) {
         return p[monsterSortMetric];
       }
-      function createMonsters(step, asc) {
-        d3.select(".communities-stats")
-          .select('.num-communities').text("Number of communities: " + communitiesDimensions[step].bottom(Infinity).length)
-        // d3.select(".communities-stats")
-        //   .select('.monster-community').text("Monster community: " + monster.com_id + ", size: " + monster.count)
 
-        var monsterTable = dc.dataTable("#dc-monster-graph");
-        monsterTable.width(800).height(800)
-          .dimension(communitiesDimensions[step])
-          .group(function(d) { return ""})
-          .size(20)
-          .columns([
-            function(d) { return d.com_id },
-            function(d) { return d.count },
-            // function(d) { return parseFloat(d.speed_avg).toFixed(2) },
-            // function(d) { return parseFloat(d.speed_std).toFixed(2) },
-            function(d) { return parseFloat(d.avg_speed_avg).toFixed(2) },
-            function(d) { return parseFloat(d.avg_speed_std).toFixed(2) },
-            // function(d) { return parseFloat(d.num_stops_sum).toFixed(2) },
-            function(d) { return parseFloat(d.congested_sum).toFixed(2) },
-            function(d) { return '<svg><g class="node" transform="translate(10,10)" style="fill:'+colorScales["com_id"](d.com_id)+'"><circle r="5"></circle>/g></svg>' }
-          ])
-          .sortBy(orderValue)
-        if (asc == true) {
-          monsterTable.order(d3.ascending);
-        }
-        else {
-          monsterTable.order(d3.descending);
-        }
-        monsterTable.render();
-        $(".dc-table-row").on('mouseover',function(d) {
-            var selectedComId = d3.select(this).select(".dc-table-column._0").html()
-            var selectedCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==selectedComId ? d : null });
-            vis.selectAll('.node').classed('selected-community',false); 
-            selectedCommunityNodes.classed('selected-community',true); 
-        });
-        $("th .sort").on('click', function(d) {
-          monsterSortMetric = $(this).parent().attr('class')
-          d3.select(this).classed('asc', !d3.select(this).classed('asc'));
-          var asc = d3.select(this).classed('asc')
+      function createMonsters(step, asc) {
+        asc = asc || false;
+        if (step in communities) {
+          d3.select(".communities-stats")
+            .select('.num-communities').text("Number of communities: " + communities[step].values.length)
+          var cf = crossfilter(communities[step].values);
+          var dim = cf.dimension(function(d) {
+            return d.count;
+          })
+          var monsterTable = dc.dataTable("#dc-monster-graph");
+          monsterTable.width(800).height(800)
+            .dimension(dim)
+            .group(function(d) { return ""})
+            .size(20)
+            .columns([
+              function(d) { return d.com_id },
+              function(d) { return d.count },
+              function(d) { return parseFloat(d.avg_speed_avg).toFixed(2) },
+              function(d) { return parseFloat(d.avg_speed_std).toFixed(2) },
+              function(d) { return parseFloat(d.congested_sum).toFixed(2) },
+              function(d) { return '<svg><g class="node" transform="translate(10,10)" style="fill:'+colorScales["com_id"](d.com_id)+'"><circle r="5"></circle>/g></svg>' }
+            ])
+            .sortBy(orderValue)
           if (asc == true) {
             monsterTable.order(d3.ascending);
           }
           else {
             monsterTable.order(d3.descending);
           }
-          monsterTable.sortBy(orderValue);
-          monsterTable.render(); 
-        });
-        updateMonsterCommunity();  
+          monsterTable.render();
+          $("th .sort").on('click', function(d) {
+            monsterSortMetric = $(this).parent().attr('class')
+            d3.select(this).classed('asc', !d3.select(this).classed('asc'));
+            var asc = d3.select(this).classed('asc')
+            if (asc == true) {
+              monsterTable.order(d3.ascending);
+            }
+            else {
+              monsterTable.order(d3.descending);
+            }
+            monsterTable.sortBy(orderValue);
+            monsterTable.redraw(); 
+          });
+          // updateMonsterCommunity();  
+        }
       }
       function updateMonsterCommunity() {
         // var monsterCommunityId = communities[0].value.id  
@@ -396,12 +527,12 @@ window.onload = function() {
         //   if ($('#trackMonsterToggle').prop('checked')) {
         //     monsterCommunityNodes.classed('monster-community',true); 
         //   }
-        var monsterCommunityId = communitiesDimensions[step].top(1)[0].com_id 
-        var monsterCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==monsterCommunityId ? d : null });
-          vis.selectAll('.node').classed('monster-community',false); 
-          if ($('#trackMonsterToggle').prop('checked')) {
-            monsterCommunityNodes.classed('monster-community',true); 
-          }
+        // var monsterCommunityId = communities[step].top(1)[0].com_id 
+        // var monsterCommunityNodes = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==monsterCommunityId ? d : null });
+        //   vis.selectAll('.node').classed('monster-community',false); 
+        //   if ($('#trackMonsterToggle').prop('checked')) {
+        //     monsterCommunityNodes.classed('monster-community',true); 
+        //   }
       }
       function createstaticTooltips(){      
         // vehicle info 
@@ -470,186 +601,37 @@ window.onload = function() {
         });
       }
 
-      function updatestaticTooltips(step) {
-        var staticTooltip = staticTooltips["vehicle"];
-        if (trackedNode && trackedNode.data() && trackedNode.data().length > 0) {
-          // find node's data for the current step
-          vis.selectAll('.node').classed('selected',false)
-          trackedNode = vis.selectAll('.node').filter(function(d, i) { return d['id']==trackedNode.data()[0]['id']  ? d : null });
-          trackedNode.classed('selected',true)
-          d = trackedNode.data()[0];
-          if (d) {
-            staticTooltip.select('rect').transition().attr({ width: 250, height: 330, rx: 5, ry: 5, class: 'bg' })
-            staticTooltip.select('.main').text("Step: " + (d.step+stepsOffset))
-            staticTooltip.select('.id').text('Id: ' + d.node_id)
-            staticTooltip.select('.degree').text('Degree: ' + d.degree)
-            staticTooltip.select('.com_id').text('Community id: ' + d.com_id)
-            staticTooltip.select('.com_size').text('Community size: ' + d.com_size)
-            staticTooltip.select('.position').text('x: ' + parseFloat(d.x).toFixed(2) + ", y: " + parseFloat(d.y).toFixed(2))
-            staticTooltip.select('.speed').text('Speed: ' + parseFloat(d.speed).toFixed(2))
-            if (d.avg_speed !== undefined) {
-              staticTooltip.select('.speed').text('Speed: ' + parseFloat(d.speed).toFixed(2) + ", avg speed: " + parseFloat(d.avg_speed).toFixed(2))
-            }
-            staticTooltip.select('.link').text('Link: ' + d.link_id)
-            staticTooltip.select('.num_stops').text('Number of stops on link: ' + d.num_stops)
-            staticTooltip.select('.originator').text('Is originator: ' + d.is_originator)
-          }
-        }
-
-        var staticTooltip = staticTooltips["community"];
-        if (trackedCommunityId) {
-          // find node's data for the current step
-          vis.selectAll('.node').classed('in-community',false)
-          var trackedCommunityVehicles = vis.selectAll('.node').filter(function(d, i) { return d['com_id']==trackedCommunityId ? d : null });
-          trackedCommunityVehicles.classed('in-community',true)
-          var avgSpeed = 0; // todo calculate from all nodes in tracked community - or crossfilter
-          var sumNumStops = 0; // todo calculate from all nodes in tracked community - or crossfilter
-          var radius = 0; // todo calculate from all nodes in tracked community - or crossfilter
-          
-          if (trackedCommunityVehicles.data().length > 0) {
-            var d = trackedCommunityVehicles.data()[0];
-            if (d) {
-              staticTooltip.select('rect').transition().attr({ width: 250, height: 300, rx: 5, ry: 5, class: 'bg' })
-              staticTooltip.select('.main').text("Step: " + (d.step+stepsOffset))
-              staticTooltip.select('.id').text('Id: ' + d.com_id)
-              staticTooltip.select('.com_size').text('Community size: ' + d.com_size)
-            }
-            trackedCommunityId = d.com_id;
-            var communities = communitiesDimensions[step].top(Infinity);
-            if (communities.length > 0) {
-              var com = communities.filter(function(c, i) { return c.com_id == trackedCommunityId; })[0];
-              staticTooltip.select('.speed_avg').text('Average speed: ' + parseFloat(com["speed_avg"]).toFixed(2))
-              staticTooltip.select('.speed_std').text('Std speed: ' + parseFloat(com["speed_std"]).toFixed(2))
-              staticTooltip.select('.avg_speed_avg').text('Average average speed: ' + parseFloat(com["avg_speed_avg"]).toFixed(2))
-              staticTooltip.select('.avg_speed_std').text('Std average speed: ' + parseFloat(com["avg_speed_std"]).toFixed(2))
-              staticTooltip.select('.area').text('area radius: ' + parseFloat(com.range).toFixed(2))
-              staticTooltip.select('.num_stops_sum').text('Number of stops: ' + com.num_stops_sum)
-              staticTooltip.select('.congested_sum').text('Number of congestions: ' + com.congested_sum)
-            }
-          }
-          else {
-            trackedCommunityId = null;
-          }
-        } 
-      }
-      function posTooltip(d) {
-        var   posX = d.fisheye ? d.fisheye.x : xScale(d.x)
-            , posY = maxY-d.y
-            , posY = d.fisheye ? d.fisheye.y : yScale(posY)
-            , text = "size by : " + sortMetric +  ", color by : " + colorMetric
-        
-        tooltip.select('.main').text(text)
-        tooltip.select('.id').text('Vehicle: ' + d.id)
-        tooltip.select('.degree').text('Degree: ' + d.degree)
-        tooltip.select('.com_id').text('Com_id: ' + d.com_id)
-        tooltip.select('.com_size').text('Com size: ' + d.com_size)
-        tooltip.select('.position').text('position: ' + posX + ' ' + posY)
-        var box = tooltip.select('.desc').node().getBBox()
-        box.x -= 10, box.y -= 10, box.width += 20, box.height += 20
-        tooltip.select('rect').attr(box)
-        var offset = d.fisheye? radius(d) * d.fisheye.z : radius(d);
-        if( posX > width / 2 ) posX -= box.width + offset; else posX+= offset
-        if( posY > height / 2 ) posY -= box.height + offset; else posY+= offset
-        if (!$('.tooltip').hasClass('static')) {
-          tooltip
-            .attr('x',0)
-            .attr('y',0)   
-            .attr('transform', 'translate(' + posX + ',' + posY + ')')
-            // .attr('transform', 'translate(' + 30 + ',' + 120 + ')')
-        }
-      }
-
       function updatePos(node){
         node
           .attr('transform', function(d){  
-            // return 'translate(' + 0 + ',' + 0 + ')'
-            // return 'translate(' + xScale(d.x) + ',' + yScale(maxY - d.y) + ')'
-            return 'translate(' + xScale(d.x) + ',' + yScale(d.y) + ')'
+            return 'translate(' + xScale(d.x) + ',' + yScale(maxY - d.y) + ')'
           })
-        node.select('circle')
-          .attr('r', function(d) { return xScale(d.range)})
-          // .attr('cx', function(d) { return -xScale(d.range)/2})
-          // .attr('cy', function(d) { return -yScale(d.range)/2})
+        node.select('circle').attr('r', radius)
         return node
       }
-      function updateColor(node){
-        node.style('fill', function(d) { 
-          if (colorMetric === "num_stops") {
-            return colorScales["com_id"](d["com_id"]) 
-          }
-          var communities = communitiesDimensions[step].top(Infinity);
-          if (communities.length > 0 && colorMetric in communities[0]) {
-              var com = communities.filter(function(c, i) { return c.com_id == d.com_id; })[0];
-              return colorScales[colorMetric](com[colorMetric]) 
-          }
-          return colorScales[colorMetric](d[colorMetric]) 
-        })
-        // node.classed("originator", function(d) { return ($("#showOriginatorsToggle").prop('checked') && d.is_originator === 1) })
-        node.style('stroke', function(d) { 
-          return colorScales[colorMetric](d[colorMetric]) 
-        })
-        node.select('circle').style("opacity", function(d) { 
-          if (colorMetric == "num_stops" && d[colorMetric] >= 2) {
-            return 1
-          }
-          return 0.5
-        })
-        node.style("stoke-opacity", 1);
-        node.style('stroke-width', function(d) { 
-          if (colorMetric == "num_stops") {
-            if (d.isOrginator === 1) {
-              return 7;
-            }
-            if (d[colorMetric] >= 2) {
-              return 5;
-            }
-            else {
-              return 0;
-            }
-          }
-          return 2;
-        })
-      }
-      function setFisheyePos(node){
-        if (node && node.select('circle') && node.select('circle').length > 0) {
-          node
-            .attr('transform', function(d){    
-              return 'translate(' +  d.fisheye.x + ' , ' +  d.fisheye.y + ')';
-            })
-          node.select('circle').attr('transform', function(d){
-            var z = d.fisheye && d.fisheye.z || 1
-            return 'scale(' + z + ')'
-          })
-          return node
-        }
-      }
-      function randomize(node){
-        node.each(function(d){
-          d.x = Math.random() * width
-          d.y = Math.random() * height
-        })
-      }
+     
       $('.sort-by').on('change', function(){
         var newMetric = $(this).val()
         if (sortMetric === newMetric) return
         sortMetric = newMetric
         updateAreaScale(sortMetric)
-        node.transition().duration(1000).call(updatePos)
+        drawVehicles(canvas, step)
+        // node.transition().duration(1000).call(updatePos)
       })
       $('.color-by').on('change', function(){
         var newMetric = $(this).val()
         if (colorMetric === newMetric) return
         colorMetric = newMetric 
-        updateColorScale(colorMetric)
-        d3.selectAll('.vis .node').transition().duration(1000).call(updateColor)
+        drawVehicles(canvas, step)
       })
       $('.algorithm-select').on('change', function(){
         var newAlgorithm = $(this).val()
         if (algorithm === newAlgorithm) return
         algorithm = newAlgorithm;
-        d3.select("#staticTooltips").attr('display', 'none')
-        loadFile(rootUrl + scenario + "/" + algorithm + "/communities_pandas.tsv", "#loaderCom", gotCommunities);
-        // loadFile(rootUrl + scenario + "/" + algorithm + "/communities.csv", "#loaderVeh", gotVehicles);
+        if (algorithm.indexOf("30012014") != -1) {
+          stepsOffset = 1682;
+        }
+        init();  
       })
       $(window).resize(function(){
         // width = window.innerWidth
@@ -676,8 +658,7 @@ window.onload = function() {
             if (!node) return
             node.each(function(d, i){
               var prev_z = d.fisheye && d.fisheye.z || 1
-              scaledD = {x: xScale(d.x), y: yScale(d.y), z: 1}
-              // scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
+              scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
               d.fisheye = fisheye(scaledD)
               d.fisheye.prev_z = prev_z
             })
@@ -689,15 +670,13 @@ window.onload = function() {
               node.each(function(d){
                 if( !max || d.fisheye.z > max.fisheye.z) { max = d; maxNode = this }
               })
-              var scaledD = {x: xScale(d.x), y: yScale(d.y), z: 1}
-              // var scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
+              var scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
               if(topNode !== maxNode) updateTopNode(maxNode)
             })
           }
         }).on('mouseleave', function(d){
           d3.select('.tooltip').style('display', 'none')
-          node.each(function(d, i){ d.fisheye = {x: xScale(d.x), y: yScale(d.y), z: 1} })
-          // node.each(function(d, i){ d.fisheye = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1} })
+          node.each(function(d, i){ d.fisheye = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1} })
           .filter(function(d){ return d.fisheye.z !== d.fisheye.prev_z })
           .call(setFisheyePos)
         })
@@ -709,13 +688,8 @@ window.onload = function() {
         xScale.range([margin, area.width - margin])
         h = area.height;
         yScale.range([margin_top, h])
-        console.log("margin, area.width - margin", margin, area.width - margin, "margin_top, h", margin_top, h)
       }
-      function updateTopNode(maxNode){
-        if (!maxNode) return;
-        if(topNode) topNode.classed('active', false)
-        topNode = d3.select(maxNode).classed('active', true)
-      }
+      
 
       $(document).keypress(function(e){
         if ((e.which && e.which == 32) || (e.keyCode && e.keyCode == 32)) {
@@ -756,7 +730,7 @@ window.onload = function() {
       }
       function play() {
         if (step < lastStep) {
-          step += stepSize;
+          step += 1;
           onStepUpdated();
           slider.slider({value :step });
           timer = setTimeout(function() {  

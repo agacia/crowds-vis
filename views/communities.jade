@@ -24,46 +24,60 @@ block content
 		.bg
 
 	.container
-		.col-xs-12.col-sm-7.vis-column
+		
+		.dashboard
+			.row
+				span.algorithm.col-xs-12.col-sm-4 Algorithm: 
+					select(class="algorithm-select")
+						option(value="30012014/test/") Test
+						option(value="30012014/simn/reduced_") Sim_n
+						option(value="30012014/simn_times_simd/reduced_") Sim_n * Sim_m
+						option(value="30012014/simn_times_simd_threshold/reduced_") Sim_n * Sim_m, threshold
+						option(value="dynamic-20/") Dynamic 20
+						option(value="threshold-0.1/") Threshold 0.1
+						option(value="threshold-0.2/") Threshold 0.2
+						option(value="threshold-0.3/") Threshold 0.3
+						option(value="threshold-0.4/") Threshold 0.4
+						option(value="threshold-0.5/") Threshold 0.5
+				span.col-xs-12.col-sm-3 Color by: 
+					select(class="color-by")
+						option(value="com_id") Community id
+						option(value="avg_speed") Average speed 
+						option(value="num_stops") Number of stops
+						option(value="avg_speed_avg") Community avg speed
+						option(value="avg_speed_std") Community std speed
+						option(value="congested_sum") Community toal stops
+				span.col-xs-12.col-sm-3 Size by: 
+					select(class="sort-by")
+						option(value="None") None 
+						option(value="avg_speed") Average speed
+						option(value="com_size") Community size 
+						option(value="degree") Degree 
+						option(value="com_score") Score
+						option(value="avg_speed_avg") Community avg speed
+						option(value="avg_speed_std") Community std speed
+						option(value="congested_sum") Community toal stops
+			.row	
+				span.col-xs-12.col-sm-6
+					<a class="playbutton play icon">Pause / Play</a>
+					span.player
+						<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+						<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+					span.slider
+				
+		
+		.col-xs-12.col-sm-7.vis-column	
 			#loaderVeh.loader
 				.loader-content
 					progress(class="progress-bar", value="10", max="100") 0 %
 					/// .loader-image
 					h4 Loading data...
-					h5.size
-			.dashboard
-				.row
-					span.algorithm.col-xs-12.col-sm-6 Algorithm: 
-						select(class="algorithm-select")
-							option(value="MobileSandSharc-avg-test") Test
-							option(value="MobileSandSharc-avg-cluster-1") Mobile Sharc
-							option(value="dynamic-10") Dynamic 10
-							option(value="threshold-0.5") Threshold 0.5
-							option(value="SandSharc") Sand Sharc
-					
-					span.col-xs-12.col-sm-6
-						<a class="playbutton play icon">Pause / Play</a>
-						span.player
-							<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
-							<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
-					
-						span.slider
-				.row
-					span.col-xs-12.col-sm-6 Color by: 
-						select(class="color-by")
-							option(value="com_id") Community id
-							option(value="avg_speed_avg") Community avg speed
-							option(value="avg_speed_std") Community std speed
-							option(value="congested_sum") Community toal stops
-					
-					span.col-xs-12.col-sm-6 Size by: 
-						select(class="sort-by")
-							option(value="range") Range
-							option(value="com_size") Community size 
-							option(value="None") None 
-				
+					h5.size	
 			.row
 				#visualisation
+				.legend
+					p Color legend:
+				#kinetic-container
 
 		.col-xs-12.col-sm-5
 			#loaderCom.loader
@@ -96,15 +110,15 @@ block content
 								///th.num_stops_avg
 								///	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
 								th.congested_sum
-									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestions
+									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestion reports
 								th Color
 					
 				
 			.data-status 
-			h4 Time series
-			#charts
-				.chart#num-vehicles
-				.chart#num-stops
+			///h4 Time series
+			///#charts
+			///	.chart#num-vehicles
+			///	.chart#num-stops
 				
 			#stats
 			.chart#hist-vehicles
@@ -117,3 +131,6 @@ block scripts
 	///<script src="js/vendor/gauss.js"></script>
 	<script src="js/tooltip.js"></script>
 	<script src="js/vendor/underscore.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>
+	<script src="js/vendor/kinetic-v5.0.1.min.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>

@@ -136,9 +136,9 @@ display: inherit;
 }
 
 .slider {
-margin: 0 5px;
+margin: 15px 5px 0px 5px;
 display: inline-block;
-width: 80%;
+width: 90%;
 }
 .playbutton {
 margin-top: -16px;
@@ -333,3 +333,10 @@ th a:hover {
 	position: relative;
 	width: 800px;
 }*/
+
+
+.legend-item .title {
+	display: inline-block;
+	width: 100px;
+	margin: 10px;
+}

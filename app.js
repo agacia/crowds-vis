@@ -37,6 +37,7 @@ app.get('/single-cross', routes.singlecross);
 app.get('/highway', routes.highway);
 app.get('/communities', routes.communities);
 app.get('/congestion', routes.congestion);
+app.get('/voronoi', routes.voronoi);
 app.get('/car2go', routes.car2go);
 app.get('/traffic', routes.traffic);
 app.get('/users', user.list);

@@ -40,9 +40,13 @@ exports.car2go = function(req, res){
 };
 
 exports.communities = function(req, res){
-  res.render('communities', { title: 'Community analysis' });
+  res.render('communities', { title: 'Community analysis (Canvas)' });
 };
 
 exports.congestion = function(req, res){
-  res.render('congestion', { title: 'Congestion propagation' });
+  res.render('congestion', { title: 'Community analysis (SVG)' });
+};
+
+exports.voronoi = function(req, res){
+  res.render('voronoi', { title: 'Congestion propagation' });
 };

@@ -1,0 +1,81 @@
+extends layout
+
+block styles
+	link(rel='stylesheet', href='/css/voronoi.css')
+
+block content
+	#staticTooltips
+	span.project-info-icon.glyphicon.glyphicon-info-sign
+	.project-info 
+		.title 
+			h3 Project information
+			button(type="button", class="close glyphicon glyphicon-remove")
+		.body 
+			h4 Description
+			p Visualisation of communities as Vonori diagram .
+			p Each area represents a community.
+			h4 Usage 
+			p 1. Select the label-propagation community detection algorithm.  
+			p 2. Select the coloring of communities based on their ids, the average speed, standard deviation of speed or a congestion level (number of double-stops)
+			p 4. Click Play or move timeline to see the evolution of communities.
+			p 5. Watch on the congestion mapped to the road network.
+		.bg
+
+	.container
+		.dashboard
+			.row
+				span.algorithm.col-xs-12.col-sm-3 Algorithm: 
+					select(class="algorithm-select")
+						option(value="test/") Test
+						option(value="simn/reduced_") Sim neighbor
+						option(value="simn_times_simd/reduced_") Sim neighbor * Sim mob
+						option(value="simn_times_simd_threshold/reduced_") Sim neighbor * Sim mob, threshold
+				span.col-xs-12.col-sm-3 Color by: 
+					select(class="color-by")
+						option(value="com_id") Community id
+						option(value="avg_speed_avg") Community avg speed
+						option(value="avg_speed_std") Community std speed
+						option(value="congested_sum") Community toal number of stops		
+				span.col-xs-12.col-sm-6
+					<a class="playbutton play icon">Pause / Play</a>
+					span.player
+						<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+						<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+					span.slider
+
+		.col-xs-12.col-sm-6.vis-column
+			#loaderVeh.loader
+				.loader-content
+					progress(class="progress-bar", value="10", max="100") 0 %
+					/// .loader-image
+					h4 Loading data...
+					h5.size		
+			.row
+				#visualisation
+
+				.legend
+					p Color legend:
+
+		.col-xs-12.col-sm-6
+			#loaderCom.loader
+				.loader-content
+					progress(class="progress-bar", value="10", max="100") 0 %
+					/// .loader-image
+					h4 Loading data...
+					h5.size
+
+			#visualisation-network
+			
+			#communities
+				.span.communities-stats
+					.num-communities
+					.monster-community
+			
+block scripts
+	<script src="js/voronoi.js"></script>
+	<script src="js/vendor/fisheye.js"></script>
+	<script src="js/vendor/crossfilter.min.js"></script>
+	<script src="js/vendor/dc.js"></script>
+	<script src="js/tooltip.js"></script>
+	<script src="js/vendor/underscore.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>
