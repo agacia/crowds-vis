@@ -486,7 +486,9 @@ window.onload = function() {
             .style('background-color', function(d) { return d.color })
             .text(function(d) { return d.value })
           legend.append('span')
-            .text("Max: " + maxValue)
+            .attr('class', 'maxval')
+            .style('margin-left','8px')
+            .text("Max: " + maxValue.toFixed(2))
       }
 
       $('.color-by').on('change', function(){
