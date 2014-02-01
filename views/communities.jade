@@ -70,7 +70,7 @@ block content
 			#loaderVeh.loader
 				.loader-content
 					progress(class="progress-bar", value="10", max="100") 0 %
-					/// .loader-image
+					//- .loader-image
 					h4 Loading data...
 					h5.size	
 			.row
@@ -83,7 +83,7 @@ block content
 			#loaderCom.loader
 				.loader-content
 					progress(class="progress-bar", value="10", max="100") 0 %
-					/// .loader-image
+					//- .loader-image
 					h4 Loading data...
 					h5.size
 
@@ -99,26 +99,26 @@ block content
 									a(type="button", class="sort glyphicon glyphicon-sort") Name
 								th.count 
 									a(type="button", class="sort glyphicon glyphicon-sort") Size
-								///th.speed_avg
-								///	a(type="button", class="sort glyphicon glyphicon-sort") Average speed
-								///th.speed_std
-								///	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed 
+								//-th.speed_avg
+								//-	a(type="button", class="sort glyphicon glyphicon-sort") Average speed
+								//-th.speed_std
+								//-	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed 
 								th.avg_speed_avg
 									a(type="button", class="sort glyphicon glyphicon-sort") Average avg speed
 								th.avg_speed_std
 									a(type="button", class="sort glyphicon glyphicon-sort") Stddev avg speed 
-								///th.num_stops_avg
-								///	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
+								//-th.num_stops_avg
+								//-	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
 								th.congested_sum
 									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestion reports
 								th Color
 					
 				
 			.data-status 
-			///h4 Time series
-			///#charts
-			///	.chart#num-vehicles
-			///	.chart#num-stops
+			//-h4 Time series
+			//-#charts
+			//-	.chart#num-vehicles
+			//-	.chart#num-stops
 				
 			#stats
 			.chart#hist-vehicles
@@ -128,7 +128,7 @@ block scripts
 	<script src="js/vendor/fisheye.js"></script>
 	<script src="js/vendor/crossfilter.min.js"></script>
 	<script src="js/vendor/dc.js"></script>
-	///<script src="js/vendor/gauss.js"></script>
+	//-<script src="js/vendor/gauss.js"></script>
 	<script src="js/tooltip.js"></script>
 	<script src="js/vendor/underscore.js"></script>
 	<script src="http://d3js.org/queue.v1.min.js"></script>
