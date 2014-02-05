@@ -337,7 +337,6 @@ window.onload = function() {
           //ctx2.stroke();
         })
 
-
         // nest.filter(function(step) {return step.key == time}).forEach(function(timeStep){
         //   timeStep.values.forEach(function(d){
         //     ctx2.fillStyle = "white"
@@ -355,18 +354,6 @@ window.onload = function() {
         q.awaitAll(onNetworkExported);
         
       })
-
-      function onNetworkExported(err, data) {
-        if (err) return;
-        console.log("onNetworkExported", err, data)
-        var url = "voronoi/saveNetwork"
-        $.ajax({
-          type: "POST",
-          url: url,
-          contentType: "application/json",
-          data: {"data":data, "scenario":scenario, "algorithm":algorithm, "filePrefix":filePrefix}
-        });
-      }
 
       function exportNetwork(cb) {
         
@@ -396,11 +383,8 @@ window.onload = function() {
               color: color,
               com_id: colorMap[color]
             });
-            // console.log("exporting step", st)
-            
           })
           var jsonData = {"data":networkToExport, "step":st, "scenario":scenario, "algorithm":algorithm, "filePrefix":filePrefix}
-          console.log("jsonData", jsonData)
           $.ajax({
             type: "POST",
             url: url,
@@ -408,8 +392,6 @@ window.onload = function() {
             data: JSON.stringify(jsonData)
           });
         }
-
-        // cb(null, networkToExport)
       }
 
       function redrawTable(step, asc) {
