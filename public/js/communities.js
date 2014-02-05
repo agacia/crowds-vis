@@ -109,6 +109,8 @@ window.onload = function() {
       createstaticTooltips(); 
 
       function init() {
+        vehicles = {}
+        communities = {}
         tip(".project-info")
         tip.show();
         pause()
@@ -124,8 +126,11 @@ window.onload = function() {
 
       }
       function gotAllData(error, results) {
+        console.log(error, results)
         tip.hide();
-        gotCommunities(error, results[0]);
+        if (results[0]) {
+          gotCommunities(error, results[0]);
+        }
         gotVehicles(error, results[1]);
       }
       
@@ -158,6 +163,7 @@ window.onload = function() {
             cb(null, data)
           })
           .on("error", function(error) { 
+            cb(null, null)
             $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
           })
           .get();
@@ -215,14 +221,17 @@ window.onload = function() {
         canvas.width = width;
         canvas.height = height;
         
-        for (time in vehicles) {
-          var stepCommunities = communities[time].values;
-          vehicles[time].values.forEach(function(d) {
-            var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
-            d["avg_speed_std"] = com[0].avg_speed_std;
-            d["avg_speed_avg"] = com[0].avg_speed_avg;
-            d["congested_sum"] = com[0].congested_sum
-          })
+        console.log("communities", communities)
+        if (communities.length > 0) {
+          for (time in vehicles) {
+            var stepCommunities = communities[time].values;
+            vehicles[time].values.forEach(function(d) {
+              var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
+              d["avg_speed_std"] = com[0].avg_speed_std;
+              d["avg_speed_avg"] = com[0].avg_speed_avg;
+              d["congested_sum"] = com[0].congested_sum
+            })
+          }
         }
         updateColorScales(data);
         updateMaxArea(areaRatio);

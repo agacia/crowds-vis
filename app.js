@@ -40,6 +40,7 @@ app.get('/communities', routes.communities);
 app.get('/congestion', routes.congestion);
 app.get('/voronoi', routes.voronoi);
 app.get('/car2go', routes.car2go);
+app.get('/car2go_sedimentation', routes.car2go_sedimentation);
 app.get('/traffic', routes.traffic);
 app.get('/users', user.list);
 

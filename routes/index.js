@@ -41,6 +41,10 @@ exports.car2go = function(req, res){
   res.render('car2go', { title: 'Car2go' });
 };
 
+exports.car2go_sedimentation = function(req, res){
+  res.render('car2go_sedimentation', { title: 'Car2go' });
+};
+
 exports.communities = function(req, res){
   res.render('communities', { title: 'Community analysis (Canvas)' });
 };
