@@ -39,12 +39,12 @@ window.onload = function() {
       , fisheye = d3.fisheye.circular().radius(20).distortion(5)
       , colorScales = {
         "com_id": d3.scale.category20(),
-        "avg_speed": d3.scale.linear().range(["red","green"]),
-        "speed": d3.scale.linear().range(["red","green"]),
-        "avg_speed_avg": d3.scale.linear().range(["red","green"]),
-        "avg_speed_std": d3.scale.linear().range(["red","green"]),
-        "num_stops": d3.scale.linear().range(["green","#FF530D"]),
-        "congested_sum": d3.scale.linear().range(["green","red"])}
+        "avg_speed": d3.scale.linear().range(["red","yellow","green"]),
+        "speed": d3.scale.linear().range(["red","yellow","green"]),
+        "avg_speed_avg": d3.scale.linear().range(["red","yellow","green"]),
+        "avg_speed_std": d3.scale.linear().range(["red","yellow","green"]),
+        "num_stops": d3.scale.linear().range(["green","yellow","#FF530D"]),
+        "congested_sum": d3.scale.linear().range(["green","yellow","red"])}
       , colorMetric = 'com_id'
       , sortMetric = $('.sort-by').val()
       , colorMetric = $('.color-by').val()
@@ -182,7 +182,7 @@ window.onload = function() {
           com.congested_sum = +d["('congested', 'sum')"]
           return com;
         })
-        console.log(data)
+        // console.log(data)
         communities= d3.nest()
           .key(function(d) { return d.step; })
           .entries(data);
@@ -407,7 +407,12 @@ window.onload = function() {
           if (metric != "com_id") {
             var maxVal = d3.max(data, function(d){ return d[metric] })
             var minVal = d3.min(data, function(d){ return d[metric] })
-            colorScales[metric].domain([minVal, maxVal])  
+            if (metric == "avg_speed") {
+              colorScales[metric].domain([minVal, 25, maxVal])  
+            }
+            else {
+              colorScales[metric].domain([minVal, (maxVal-minVal)/2, maxVal])
+            }
             var colors = []
             var scaleLen = colorScales[metric].range().length;
             if (scaleLen < 9) {
@@ -731,15 +736,15 @@ window.onload = function() {
       function play() {
         if (step < lastStep) {
           step += 1;
-          onStepUpdated();
-          slider.slider({value :step });
-          timer = setTimeout(function() {  
-            play();
-          }, timerDelay);
         }
         else {
-          pause();
+          step = firstStep;
         }
+        onStepUpdated();
+        slider.slider({value :step });
+        timer = setTimeout(function() {  
+            play();
+          }, timerDelay);
       }
       function pause() {
         if (timer) {

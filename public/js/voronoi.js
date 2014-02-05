@@ -50,9 +50,9 @@ window.onload = function() {
         "com_id": d3.scale.category20(),
         // "avg_speed_avg": d3.scale.quantile().range(d3.range(9)),
         // "avg_speed_avg": d3.scale.ordinal().range(colors),
-        "avg_speed_avg": d3.scale.linear().range(["#d73027","#1a9850"]),
-        "avg_speed_std": d3.scale.linear().range(["#1a9850","#d73027"]),
-        "congested_sum": d3.scale.linear().range(["#1a9850","#d73027"])}
+        "avg_speed_avg": d3.scale.linear().range(["#d73027","yellow","#1a9850"]),
+        "avg_speed_std": d3.scale.linear().range(["#1a9850","yellow","#d73027"]),
+        "congested_sum": d3.scale.linear().range(["#1a9850","yellow","#d73027"])}
       , colorMetric = 'com_id'
       , colorMetric = $('.color-by').val()
       , algorithm = $('.algorithm-select').val()
@@ -116,20 +116,19 @@ window.onload = function() {
         network.length = 0;
         clear(canvas);
         clear(canvas_network)
-        console.log("downloading data")
         reload = reload || false;
         tip(".project-info")
         tip.show();
-        // var q = queue(1);
-        // // q.defer(function(par, cb) { console.log("in cb1", par); cb(null, par); }, "par1")
-        // q.defer(loadFile, rootUrl + scenario + "/" + algorithm + "/communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
-        // q.defer(loadFile, rootUrl + scenario + "/" + algorithm + "/communities.csv", "#loaderVeh") // , gotVehicles) 
-        // if (!reload) { // load network for the first time only
-        //   q.defer(d3.json, rootUrl+scenario+"/"+"Network_v4.json") //, gotNetworkData)
-        // }
-        // q.awaitAll(gotAllData);
-        loadFile(rootUrl + scenario + "/" + algorithm + filePrefix + "communities.csv", "#loaderVeh", gotVehicles);
-        loadFile(rootUrl + scenario + "/" + algorithm + filePrefix + "communities_pandas.tsv", "#loaderCom", gotCommunities);
+        var q = queue(1);
+        // q.defer(function(par, cb) { console.log("in cb1", par); cb(null, par); }, "par1")
+        q.defer(loadFile, rootUrl + scenario + "/" + algorithm + filePrefix + "communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
+        q.defer(loadFile, rootUrl + scenario + "/" + algorithm + filePrefix + "communities.csv", "#loaderVeh") // , gotVehicles) 
+        if (!reload) { // load network for the first time only
+          q.defer(d3.json, rootUrl+scenario+"/"+"Network_v4.json") //, gotNetworkData)
+        }
+        q.awaitAll(gotAllData);
+        // loadFile(rootUrl + scenario + "/" + algorithm + filePrefix + "communities.csv", "#loaderVeh", gotVehicles);
+        // loadFile(rootUrl + scenario + "/" + algorithm + filePrefix + "communities_pandas.tsv", "#loaderCom", gotCommunities);
         if (!reload) d3.json(rootUrl+scenario+"/"+"Network_v4.json", gotNetworkData);
       }
 
@@ -142,7 +141,6 @@ window.onload = function() {
         if (results.length > 1) {
           gotNetworkData(error, results[2]);
         }
-        console.log("redrawing step... ", step)
         redraw(step);
       }
       
@@ -240,7 +238,7 @@ window.onload = function() {
         // }
         // timeDimension.filter(null);
 
-        console.log("got communities", data, "steps loaded ", communitiesNest.length)
+        // console.log("got communities", data, "steps loaded ", communitiesNest.length)
       }
 
       function gotVehicles(error, data) {
@@ -279,7 +277,7 @@ window.onload = function() {
         }
 
         redraw(step)
-        console.log("got vehicles", nest, nest.length)
+        // console.log("got vehicles", nest, nest.length)
       }
 
       function redraw(time) {
@@ -322,15 +320,15 @@ window.onload = function() {
         // network
         var ctx2 = canvas_network.getContext('2d');
         var ctx = canvas.getContext('2d');
-        network.forEach(function(d){
+        network.forEach(function(d) {
           if (d.x == max_area) {
             d.x --;
           }
           if (d.y == max_area) {
             d.y --;
           }
-          var colorData = ctx.getImageData(d.x,d.y,1,1)
-          var color = rgb2hex(colorData.data[0], colorData.data[1], colorData.data[2])
+          var colorData = ctx.getImageData(d.x,d.y,1,1);
+          var color = rgb2hex(colorData.data[0], colorData.data[1], colorData.data[2]);
           ctx2.fillStyle = color;
           ctx2.beginPath();
           ctx2.arc(d.x, d.y, networkR, 0, 2 * Math.PI, false);
@@ -338,6 +336,7 @@ window.onload = function() {
           ctx2.fill();
           //ctx2.stroke();
         })
+
 
         // nest.filter(function(step) {return step.key == time}).forEach(function(timeStep){
         //   timeStep.values.forEach(function(d){
@@ -348,6 +347,69 @@ window.onload = function() {
         //     ctx2.fill();
         //   })
         // })  
+      }
+
+      $('#exportNetBtn').click(function(e) {
+        var q = queue(1);
+        q.defer(exportNetwork) 
+        q.awaitAll(onNetworkExported);
+        
+      })
+
+      function onNetworkExported(err, data) {
+        if (err) return;
+        console.log("onNetworkExported", err, data)
+        var url = "voronoi/saveNetwork"
+        $.ajax({
+          type: "POST",
+          url: url,
+          contentType: "application/json",
+          data: {"data":data, "scenario":scenario, "algorithm":algorithm, "filePrefix":filePrefix}
+        });
+      }
+
+      function exportNetwork(cb) {
+        
+        var ctx = canvas.getContext('2d');
+        var url = "voronoi/saveNetwork"
+        
+        for (var st in nest) {
+          var networkToExport = []
+          // if (st > 3) break;
+          redrawCommunities(st);
+          network.forEach(function(d) {
+            
+            var x = d.x;
+            var y = d.y;
+            if (d.x == max_area) {
+              x --;
+            }
+            if (d.y == max_area) {
+              y --;
+            }
+            var colorData = ctx.getImageData(x,y,1,1);
+            var color = rgb2hex(colorData.data[0], colorData.data[1], colorData.data[2]);
+            networkToExport.push({
+              x : d.x,
+              y : d.y,
+              step : st,
+              color: color,
+              com_id: colorMap[color]
+            });
+            // console.log("exporting step", st)
+            
+          })
+          var jsonData = {"data":networkToExport, "step":st, "scenario":scenario, "algorithm":algorithm, "filePrefix":filePrefix}
+          console.log("jsonData", jsonData)
+          $.ajax({
+            type: "POST",
+            url: url,
+            contentType: "application/json",
+            data: JSON.stringify(jsonData)
+          });
+        }
+
+        // cb(null, networkToExport)
       }
 
       function redrawTable(step, asc) {
@@ -451,12 +513,12 @@ window.onload = function() {
               scaleLen = 9
             }
             var maxValue = maxVal;
-            if (metric === "avg_speed_avg") {
-              // todo
-              maxVal = 15;
+            if (metric === "avg_speed_avg" || metric == "avg_speed") {
+              colorScales[metric].domain([minVal, 25, maxVal])  
             }
-            colorScales[metric].domain([minVal, maxVal])  
-            
+            else {
+              colorScales[metric].domain([minVal, (maxVal-minVal)/2, maxVal])  
+            }
             var interval = (maxVal - minVal)/scaleLen;
             for (var i in d3.range(scaleLen)) {
               var value = minVal + i * interval;
@@ -548,15 +610,15 @@ window.onload = function() {
       function play() {
         if (step < lastStep) {
           step += stepSize;
-          onStepUpdated();
-          slider.slider({value :step });
-          timer = setTimeout(function() {  
-            play();
-          }, timerDelay);
         }
         else {
-          pause();
+          step = firstStep;
         }
+        onStepUpdated();
+        slider.slider({value :step });
+        timer = setTimeout(function() {  
+            play();
+          }, timerDelay);
       }
       function pause() {
         if (timer) {

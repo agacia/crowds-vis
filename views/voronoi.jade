@@ -29,7 +29,6 @@ block content
 						option(value="test/") Test
 						option(value="simn/reduced_") Sim neighbor
 						option(value="simn_times_simd/reduced_") Sim neighbor * Sim mob
-						option(value="simn_times_simd_threshold/reduced_") Sim neighbor * Sim mob, threshold
 				span.col-xs-12.col-sm-3 Color by: 
 					select(class="color-by")
 						option(value="com_id") Community id
@@ -66,6 +65,8 @@ block content
 
 			#visualisation-network
 			
+			button#exportNetBtn.btn Export network
+
 			#communities
 				.span.communities-stats
 					.num-communities

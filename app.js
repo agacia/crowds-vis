@@ -22,6 +22,7 @@ app.use(express.urlencoded());
 app.use(express.methodOverride());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.bodyParser());
 
 // development only
 if ('development' == app.get('env')) {
@@ -41,6 +42,8 @@ app.get('/voronoi', routes.voronoi);
 app.get('/car2go', routes.car2go);
 app.get('/traffic', routes.traffic);
 app.get('/users', user.list);
+
+app.post('/voronoi/saveNetwork', routes.saveNetwork)
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));

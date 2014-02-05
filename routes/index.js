@@ -2,6 +2,8 @@
 /*
  * GET home page.
  */
+var fs = require("fs")
+    , pathjs = require('path')
 
 exports.index = function(req, res){
   res.render('index', { title: 'Main' });
@@ -50,3 +52,11 @@ exports.congestion = function(req, res){
 exports.voronoi = function(req, res){
   res.render('voronoi', { title: 'Congestion propagation' });
 };
+
+exports.saveNetwork = function(req, res) {
+  var jsonRes = req.body;
+  var path = "public/data/"  
+  var pathJSON = pathjs.join(path, jsonRes.scenario, jsonRes.algorithm, jsonRes.step + "_test.json");
+  // console.log("path", pathJSON)
+  fs.writeFileSync(pathJSON, JSON.stringify(jsonRes.data))                
+}
