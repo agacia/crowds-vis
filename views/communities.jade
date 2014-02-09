@@ -29,23 +29,25 @@ block content
 			.row
 				span.algorithm.col-xs-12.col-sm-4 Algorithm:
 					select(class="algorithm-select")
-						option(value="30012014/test/") Test
-						option(value="30012014/simn/reduced_") Sim_n
-						option(value="30012014/simn_times_simd/reduced_") Sim_n * Sim_m
-
-						option(value="04022014_test/nsim/") nsim
-						option(value="04022014_test/nsim2/") nsim2
-						option(value="04022014_test/nsim_sr/") nsim_sr
-						option(value="04022014_test/nsim_dsd/") nsim_dsd
 						
+						option(value="Manhattan/07022014/nsim/reduced_") new nsim
+						option(value="Manhattan/07022014/nsim_sr/reduced_") new nsim_sr 
+						option(value="Manhattan/07022014/nsim_dsd/reduced_") new nsim_dsd 
+
+						option(value="Highway/07022014/nsim/") highway nsim
+						option(value="Highway/07022014/nsim_sr/") highway nsim_sr
+						option(value="Highway/07022014/nsim_dsd/") highway nsim_dsd
+							
 				span.col-xs-12.col-sm-3 Color by:
 					select(class="color-by")
 						option(value="com_id") Community id
 						option(value="avg_speed") Average speed
+						option(value="speed") Speed
 						option(value="num_stops") Number of stops
 						option(value="avg_speed_avg") Community avg speed
 						option(value="avg_speed_std") Community std speed
 						option(value="congested_sum") Community toal stops
+						option(value="dynamism") Dynamism
 				span.col-xs-12.col-sm-3 Size by:
 					select(class="sort-by")
 						option(value="None") None
@@ -56,6 +58,7 @@ block content
 						option(value="avg_speed_avg") Community avg speed
 						option(value="avg_speed_std") Community std speed
 						option(value="congested_sum") Community toal stops
+						option(value="dynamism") Dynamism
 			.row
 				span.col-xs-12.col-sm-6
 					<a class="playbutton play icon">Pause / Play</a>

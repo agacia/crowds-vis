@@ -49,6 +49,10 @@ exports.communities = function(req, res){
   res.render('communities', { title: 'Community analysis (Canvas)' });
 };
 
+exports.dynamism = function(req, res){
+  res.render('dynamism', { title: 'Dynamism' });
+};
+
 exports.congestion = function(req, res){
   res.render('congestion', { title: 'Community analysis (SVG)' });
 };

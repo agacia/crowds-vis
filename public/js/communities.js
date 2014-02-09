@@ -40,6 +40,7 @@ window.onload = function() {
       , colorScales = {
         "com_id": d3.scale.category20(),
         "avg_speed": d3.scale.linear().range(["red","yellow","green"]),
+        "dynamism": d3.scale.linear().range(["red","yellow","green"]),
         "speed": d3.scale.linear().range(["red","yellow","green"]),
         "avg_speed_avg": d3.scale.linear().range(["red","yellow","green"]),
         "avg_speed_std": d3.scale.linear().range(["red","yellow","green"]),
@@ -61,7 +62,7 @@ window.onload = function() {
         }
       , dataKey = function(d){ return d.node_id }
       , format = function(d) { // when read cvs
-          var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops', 'is_originator'];
+          var numKeys = ['node_id', 'step', 'x', 'y', 'degree', 'cc_id', 'cc_size', 'com_id', 'cos_score', 'com_size', 'speed', 'num_stops', 'is_originator', 'dynamism'];
           numKeys.forEach(function(key){ d[key] = Number(d[key]) })
           d.id = d.node_id;
           return d;
@@ -82,7 +83,7 @@ window.onload = function() {
       }
       , topNode = null
       , rootUrl = 'data/'
-      , scenario = "Manhattan"
+      , scenario = ""
       , slider
       , dateLabel = $("<div/>")
                   .css({ position : 'absolute' , top : 0, left : 0, width: "60px"})
@@ -124,9 +125,19 @@ window.onload = function() {
         q.defer(loadFile, rootUrl + scenario + "/" + algorithm + "communities.csv", "#loaderVeh") // , gotVehicles) 
         q.awaitAll(gotAllData);
 
+        if (algorithm.indexOf("Highway") != -1) {
+          areaRatio = 0.1;
+          margin_top = 10;
+        }
+        else if (algorithm.indexOf("Manhattan") != -1) {
+          areaRatio = 1;
+          margin_top = 5;
+        }
+
+
       }
       function gotAllData(error, results) {
-        console.log(error, results)
+        // console.log(error, results)
         tip.hide();
         if (results[0]) {
           gotCommunities(error, results[0]);
@@ -226,10 +237,12 @@ window.onload = function() {
           for (time in vehicles) {
             var stepCommunities = communities[time].values;
             vehicles[time].values.forEach(function(d) {
-              var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
-              d["avg_speed_std"] = com[0].avg_speed_std;
-              d["avg_speed_avg"] = com[0].avg_speed_avg;
-              d["congested_sum"] = com[0].congested_sum
+              var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id})
+              if (com.length > 0) {
+                d["avg_speed_std"] = com[0].avg_speed_std;
+                d["avg_speed_avg"] = com[0].avg_speed_avg;
+                d["congested_sum"] = com[0].congested_sum
+              }
             })
           }
         }
@@ -313,7 +326,10 @@ window.onload = function() {
       function drawVehicles(canvas, step) {
         context = canvas.getContext("2d");
         clear(context);
-        d3.selectAll(".custom-circle").remove()
+        d3.selectAll(".custom-circle").remove();
+        if (!(step in vehicles)) {
+          return;
+        }
         for (v in vehicles[step].values) {
           var vehicle = vehicles[step].values[v];
           var x = xScale(vehicle.x);
@@ -418,6 +434,9 @@ window.onload = function() {
             var minVal = d3.min(data, function(d){ return d[metric] })
             if (metric == "avg_speed") {
               colorScales[metric].domain([minVal, 25, maxVal])  
+            }
+            else if (metric == "dynamism") {
+              colorScales[metric].domain([minVal, 0, maxVal])  
             }
             else {
               colorScales[metric].domain([minVal, (maxVal-minVal)/2, maxVal])

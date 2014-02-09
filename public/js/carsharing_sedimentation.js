@@ -123,7 +123,7 @@ window.onload = function() {
             }
 
           // Difference between a Bubble chart and a piechart settings model 
-          mySettings.chart.treeLayout = true
+          // mySettings.chart.treeLayout = true
           mySettings.chart.spacer     = 100
           mySettings.chart.column     = 3
           mySettings.options.layout   = false

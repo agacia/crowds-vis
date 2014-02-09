@@ -93,7 +93,7 @@ window.onload = function() {
         }
         , topNode = null
         , rootUrl = 'data/'
-        , scenario = "Manhattan"
+        , scenario = ""
         , slider
         , dateLabel = $("<div/>")
                     .css({ position : 'absolute' , top : 0, left : 0, width: "60px"})

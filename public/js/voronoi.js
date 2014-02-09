@@ -60,7 +60,7 @@ window.onload = function() {
       , id = 0, order = 0
             , stepsOffset = 1682
       , rootUrl = 'data/'
-      , scenario = "Manhattan/30012014"
+      , scenario = ""
       , filePrefix = ""
       , slider
       , formatStep = function(step) {
@@ -124,12 +124,12 @@ window.onload = function() {
         q.defer(loadFile, rootUrl + scenario + "/" + algorithm + filePrefix + "communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
         q.defer(loadFile, rootUrl + scenario + "/" + algorithm + filePrefix + "communities.csv", "#loaderVeh") // , gotVehicles) 
         if (!reload) { // load network for the first time only
-          q.defer(d3.json, rootUrl+scenario+"/"+"Network_v4.json") //, gotNetworkData)
+          q.defer(d3.json, rootUrl+"Manhattan/Network_v4.json") //, gotNetworkData)
         }
         q.awaitAll(gotAllData);
         // loadFile(rootUrl + scenario + "/" + algorithm + filePrefix + "communities.csv", "#loaderVeh", gotVehicles);
         // loadFile(rootUrl + scenario + "/" + algorithm + filePrefix + "communities_pandas.tsv", "#loaderCom", gotCommunities);
-        if (!reload) d3.json(rootUrl+scenario+"/"+"Network_v4.json", gotNetworkData);
+        if (!reload) d3.json(rootUrl+"Manhattan/Network_v4.json", gotNetworkData);
       }
 
       function gotAllData(error, results) {
@@ -270,9 +270,11 @@ window.onload = function() {
           var stepCommunities = communitiesNest[time].values;
           nest[time].values.forEach(function(d) {
             var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
-            d["avg_speed_std"] = com[0].avg_speed_std;
-            d["avg_speed_avg"] = com[0].avg_speed_avg;
-            d["congested_sum"] = com[0].congested_sum
+            if (com.length > 0) {
+              d["avg_speed_std"] = com[0].avg_speed_std;
+              d["avg_speed_avg"] = com[0].avg_speed_avg;
+              d["congested_sum"] = com[0].congested_sum
+            }
           })
         }
 

@@ -29,20 +29,15 @@ block content
 			.row
 				span.algorithm.col-xs-12.col-sm-4 Algorithm:
 					select(class="algorithm-select")
-						option(value="30012014/test/") Test
-						option(value="30012014/simn/reduced_") Sim_n
-						option(value="30012014/simn_times_simd/reduced_") Sim_n * Sim_m
-						option(value="30012014/simn_times_simd_threshold/reduced_") Sim_n * Sim_m, threshold
-						option(value="dynamic-20/") Dynamic 20
-						option(value="threshold-0.1/") Threshold 0.1
-						option(value="threshold-0.2/") Threshold 0.2
-						option(value="threshold-0.3/") Threshold 0.3
-						option(value="threshold-0.4/") Threshold 0.4
-						option(value="threshold-0.5/") Threshold 0.5
+						option(value="Manhattan/07022014/nsim/reduced_") new nsim 
+						option(value="Manhattan/07022014/nsim_sr/reduced_") new nsim_sr  
+						option(value="Manhattan/07022014/nsim_dsd/reduced_") new nsim_dsd  
+
 				span.col-xs-12.col-sm-3 Color by:
 					select(class="color-by")
 						option(value="com_id") Community id
 						option(value="avg_speed") Average speed
+						option(value="speed") Speed
 						option(value="num_stops") Number of stops
 						option(value="avg_speed_avg") Community avg speed
 						option(value="avg_speed_std") Community std speed
