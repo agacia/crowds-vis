@@ -121,8 +121,8 @@ window.onload = function() {
         // loadFile(rootUrl + scenario + "/" + algorithm + "communities.csv", "#loaderVeh", gotVehicles);
         // loadFile(rootUrl + scenario + "/" + algorithm + "communities_pandas.tsv", "#loaderCom", gotCommunities);
         var q = queue(1);
-        q.defer(loadFile, rootUrl + "/" + algorithm + "communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
-        q.defer(loadFile, rootUrl + "/" + algorithm + "communities.csv", "#loaderVeh") // , gotVehicles) 
+        q.defer(loadFile, rootUrl + algorithm + "communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
+        q.defer(loadFile, rootUrl + algorithm + "communities.csv", "#loaderVeh") // , gotVehicles) 
         q.awaitAll(gotAllData);
 
         if (algorithm.indexOf("Highway") != -1) {
