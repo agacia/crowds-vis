@@ -147,7 +147,7 @@ window.onload = function() {
       
 
       function loadFile(url, loader, cb) {
-        console.log("loading file ", url)
+        // console.log("loading file ", url)
         $(loader).show()
         var xhr = d3.tsv(url)
           .row(format)
