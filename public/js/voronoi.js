@@ -58,16 +58,17 @@ window.onload = function() {
       , algorithm = $('.algorithm-select').val()
       , firstStep = 0, step = 0, lastStep = 0, stepSize = 0
       , id = 0, order = 0
-            , stepsOffset = 1682
+            , stepOffset = 1689
       , rootUrl = 'data/'
       , scenario = ""
       , filePrefix = ""
       , slider
       , formatStep = function(step) {
-        var seconds = step + stepsOffset
-        if ((lastStep - firstStep) > 120) {
-         return (seconds/60).toFixed(2) + " min"
-        }
+        // var seconds = step + stepsOffset
+        // if ((lastStep - firstStep) > 120) {
+        //  return (seconds/60).toFixed(2) + " min"
+        // }
+        var seconds = stepOffset + step;
         return seconds + " s"
       }
       , dateLabel = $("<div/>")
@@ -451,6 +452,7 @@ window.onload = function() {
       }
 
       function initialiseSlider(firstStep, lastStep, stepSize, callback) {
+        console.log("initialiseSlider",firstStep, lastStep, stepSize)
         $(".slider").slider()
           .find(".ui-slider-handle")
           .append(dateLabel)
@@ -478,7 +480,7 @@ window.onload = function() {
             minY = d3.min(data[key], function(d) {return d.y; })
             maxY = d3.max(data[key], function(d) {return d.y; })
             areaScales[key]["x"].domain([minX,maxX])
-            areaScales[key]["y"].domain([minY,maxY])
+            areaScales[key]["y"].domain([maxY,minY])
             // console.log(key, "x", minX, maxX, "y", minY, maxY)
           }
         }

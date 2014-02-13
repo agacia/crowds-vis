@@ -83,12 +83,12 @@ window.onload = function() {
             d.order = order++;
             return d;
         }
-        , stepsOffset = 841
+        , stepsOffset = 1689
         , formatStep = function(step) {
-          var seconds = step + stepsOffset
-          if ((lastStep - firstStep) > 120) {
-           return (seconds/60).toFixed(2) + " min"
-          }
+          var seconds = step*stepSize + stepsOffset
+          // if ((lastStep - firstStep) > 120) {
+          //  return (seconds/60).toFixed(2) + " min"
+          // }
           return seconds + " s"
         }
         , topNode = null
@@ -197,7 +197,7 @@ window.onload = function() {
           .key(function(d) { return d.step; })
           .entries(data);
 
-        createMonsters(step)
+        createMonsters(step/stepSize)
       }
       function gotVehicles(error, data) {
         data.forEach(function(d){
@@ -217,7 +217,7 @@ window.onload = function() {
         if (vehicles.length > 1) {
           stepSize = +vehicles[1].key - firstStep;
         }
-        initialiseSlider(firstStep/stepSize, (lastStep-1)/stepSize, stepSize/stepSize, onStepUpdated)
+        initialiseSlider(firstStep/stepSize, (lastStep-1)/stepSize, 1, onStepUpdated)
          
         for (time in vehicles) {
           var stepCommunities = communities[time].values;
@@ -255,8 +255,8 @@ window.onload = function() {
       function updateAreaScale(metric){
         if (metric === "None") {
           areaScale.domain([0, 10])
-        } else if (vehicles && vehicles[step].values.length > 0) {
-          areaScale.domain([0, d3.max(vehicles[step].values,function(d){ return d[metric] }) ])
+        } else if (vehicles && vehicles[step/stepSize].values.length > 0) {
+          areaScale.domain([0, d3.max(vehicles[step/stepSize].values,function(d){ return d[metric] }) ])
         }
       }
 
@@ -304,6 +304,8 @@ window.onload = function() {
       }
 
       function initialiseSlider(firstStep, lastStep, stepSize, callback) {
+        // console.log("initialiseSlider",firstStep, lastStep, stepSize)
+        $(".slider").slider()
         $(".slider").slider()
           .find(".ui-slider-handle")
           .append(dateLabel)
@@ -319,6 +321,7 @@ window.onload = function() {
             })
       }
       function onStepUpdated() {
+        // console.log("step", step, "stepSize", stepSize, "time", time, vehicles)
         showVehicles(vehicles[step].values)
         dateLabel.text(formatStep(step))        
         updatestaticTooltips(step);
@@ -1025,17 +1028,17 @@ window.onload = function() {
         $elem.parent().append($elem);
       }
       function play() {
-        if (step < lastStep) {
+        if (step*stepSize < lastStep) {
           step += 1;
-          onStepUpdated();
-          slider.slider({value :step });
-          timer = setTimeout(function() {  
-            play();
-          }, timerDelay);
         }
         else {
-          pause();
+          step = firstStep/stepSize;
         }
+        onStepUpdated();
+        slider.slider({value :step });
+        timer = setTimeout(function() {  
+            play();
+          }, timerDelay);
       }
       function pause() {
         if (timer) {

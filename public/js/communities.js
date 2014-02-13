@@ -73,12 +73,12 @@ window.onload = function() {
           d.order = order++;
           return d;
       }
-      , stepsOffset = 841
+      , stepsOffset = 1689
       , formatStep = function(step) {
-        var seconds = step + stepsOffset
-        if ((lastStep - firstStep) > 120) {
-         return (seconds/60).toFixed(2) + " min"
-        }
+        var seconds = step*stepSize + stepsOffset
+        // if ((lastStep - firstStep) > 120) {
+        //  return (seconds/60).toFixed(2) + " min"
+        // }
         return seconds + " s"
       }
       , topNode = null
@@ -87,7 +87,7 @@ window.onload = function() {
       , slider
       , dateLabel = $("<div/>")
                   .css({ position : 'absolute' , top : 0, left : 0, width: "60px"})
-                  .text(formatStep(step*stepSize))
+                  .text(formatStep(step))
       , vehicles = {}
       , timer
       , timerDelay = 100
@@ -226,7 +226,7 @@ window.onload = function() {
         if (vehicles.length > 1) {
           stepSize = +vehicles[1].key - firstStep;
         }
-        initialiseSlider(firstStep/stepSize, (lastStep-1)/stepSize, stepSize/stepSize, onStepUpdated)
+        initialiseSlider(firstStep/stepSize, (lastStep-1)/stepSize, 1, onStepUpdated)
          
         canvas.style.position = "relative";
         var root = $('body #visualisation');
@@ -286,55 +286,56 @@ window.onload = function() {
         stage.add(layers['tooltip']);
       }
 
-      function drawVehiclesKinetic(step) {
-        var circlesLayer = layers['circles'];
-        circlesLayer.destroy();
-        var tooltipLayer = layers['tooltip'];
-        var tooltip = tooltipLayer.children[0]
-        for (v in vehicles[step]) {( function(st, lay) {
-          var vehicle = vehicles[step][v];
-          var x = xScale(vehicle.x);
-          var y = yScale(vehicle.y);
-          var color = colorScales[colorMetric](vehicle[colorMetric]) 
-          var r = radius(vehicle)
-          var circle = new Kinetic.Circle({
-              x: x,
-              y: y,
-              radius: r,
-              fill: color
-            });
-          circle.on("mousemove", function() {
-              // update tooltip
-              var mousePos = st.getPointerPosition();
-              tooltip.setPosition(mousePos.x + 5, mousePos.y + 5);
-              tooltip.setText("node: " + vehicle['node_id'] + ", community: " + vehicle['com_id'] + ", avg speed: " + vehicle['avg_speed']);
-              tooltip.show();
-              tooltipLayer.draw();
-            });
+      // function drawVehiclesKinetic(step) {
+      //   var circlesLayer = layers['circles'];
+      //   circlesLayer.destroy();
+      //   var tooltipLayer = layers['tooltip'];
+      //   var tooltip = tooltipLayer.children[0]
+      //   for (v in vehicles[step]) {( function(st, lay) {
+      //     var vehicle = vehicles[step][v];
+      //     var x = xScale(vehicle.x);
+      //     var y = yScale(vehicle.y);
+      //     var color = colorScales[colorMetric](vehicle[colorMetric]) 
+      //     var r = radius(vehicle)
+      //     var circle = new Kinetic.Circle({
+      //         x: x,
+      //         y: y,
+      //         radius: r,
+      //         fill: color
+      //       });
+      //     circle.on("mousemove", function() {
+      //         // update tooltip
+      //         var mousePos = st.getPointerPosition();
+      //         tooltip.setPosition(mousePos.x + 5, mousePos.y + 5);
+      //         tooltip.setText("node: " + vehicle['node_id'] + ", community: " + vehicle['com_id'] + ", avg speed: " + vehicle['avg_speed']);
+      //         tooltip.show();
+      //         tooltipLayer.draw();
+      //       });
 
-            circle.on("mouseout", function() {
-              tooltip.hide();
-              tooltipLayer.draw();
-            });
+      //       circle.on("mouseout", function() {
+      //         tooltip.hide();
+      //         tooltipLayer.draw();
+      //       });
 
-            circlesLayer.add(circle);
-          })(stage, layers);
-        }
+      //       circlesLayer.add(circle);
+      //     })(stage, layers);
+      //   }
 
-        stage.add(layers['circles']);
-      }
+      //   stage.add(layers['circles']);
+      // }
 
       function drawVehicles(canvas, step) {
+        var time = step;
         context = canvas.getContext("2d");
         clear(context);
         d3.selectAll(".custom-circle").remove();
-        if (!(step in vehicles)) {
+        if (!(time in vehicles)) {
           return;
         }
-        for (v in vehicles[step].values) {
-          var vehicle = vehicles[step].values[v];
+        for (v in vehicles[time].values) {
+          var vehicle = vehicles[time].values[v];
           var x = xScale(vehicle.x);
-          var y = yScale(vehicle.y);
+          var y = yScale(maxY - vehicle.y);
           var color = colorScales[colorMetric](vehicle[colorMetric]) 
           var r = radius(vehicle)
           // console.log("vehicle", vehicle, "r", r)
@@ -390,6 +391,7 @@ window.onload = function() {
       }
       
       function initialiseSlider(firstStep, lastStep, stepSize, callback) {
+        console.log("initialiseSlider",firstStep, lastStep, stepSize)
         $(".slider").slider()
           .find(".ui-slider-handle")
           .append(dateLabel)
@@ -406,7 +408,7 @@ window.onload = function() {
       }
       function onStepUpdated() {
         drawVehicles(canvas, step)
-        dateLabel.text(formatStep(step*stepSize))        
+        dateLabel.text(formatStep(step))        
         createMonsters(step);
       }
 
@@ -510,10 +512,11 @@ window.onload = function() {
 
       function createMonsters(step, asc) {
         asc = asc || false;
-        if (step in communities) {
+        var time = step / stepSize;
+        if (time in communities) {
           d3.select(".communities-stats")
-            .select('.num-communities').text("Number of communities: " + communities[step].values.length)
-          var cf = crossfilter(communities[step].values);
+            .select('.num-communities').text("Number of communities: " + communities[time].values.length)
+          var cf = crossfilter(communities[time].values);
           var dim = cf.dimension(function(d) {
             return d.count;
           })
@@ -676,45 +679,6 @@ window.onload = function() {
         updateMaxArea(areaRatio)
         node.select('circle').attr('r', radius)
       })
-      function fisheyeEffect(vis){
-        return vis.on('mouseover', function(d){
-          var m = d3.mouse(this);
-          // var circle = d3.select(this);
-          if(!node) return
-          d3.select('.tooltip').style('display', 'inherit')
-        }).on("mousemove", function(d){
-          if (!d) {
-            var d = d3.select(this).select('circle').datum();
-          }
-          if (fisheye) {
-            var m = d3.mouse(this)
-            fisheye.focus(m)
-            if (!node) return
-            node.each(function(d, i){
-              var prev_z = d.fisheye && d.fisheye.z || 1
-              scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
-              d.fisheye = fisheye(scaledD)
-              d.fisheye.prev_z = prev_z
-            })
-            .filter(function(d){ return d.fisheye.z !== d.fisheye.prev_z })
-            // .sort(function(a, b){ return a.fisheye.z > b.fisheye.z ? 1 : -1 })
-            .call(setFisheyePos)
-            .call(function(node){
-              var max, maxNode
-              node.each(function(d){
-                if( !max || d.fisheye.z > max.fisheye.z) { max = d; maxNode = this }
-              })
-              var scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
-              if(topNode !== maxNode) updateTopNode(maxNode)
-            })
-          }
-        }).on('mouseleave', function(d){
-          d3.select('.tooltip').style('display', 'none')
-          node.each(function(d, i){ d.fisheye = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1} })
-          .filter(function(d){ return d.fisheye.z !== d.fisheye.prev_z })
-          .call(setFisheyePos)
-        })
-      }
       function updateMaxArea(areaRatio){
         area = calcBestArea(areaRatio)
         max_area = area.r
@@ -763,11 +727,11 @@ window.onload = function() {
         $elem.parent().append($elem);
       }
       function play() {
-        if (step < lastStep) {
+        if (step*stepSize < lastStep) {
           step += 1;
         }
         else {
-          step = firstStep;
+          step = firstStep/stepSize;
         }
         onStepUpdated();
         slider.slider({value :step });
