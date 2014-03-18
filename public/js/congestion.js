@@ -31,12 +31,12 @@ window.onload = function() {
         , fisheye = d3.fisheye.circular().radius(20).distortion(5)
         , colorScales = {
           "com_id": d3.scale.category20(),
-          "avg_speed": d3.scale.linear().range(["red","green"]),
-          "speed": d3.scale.linear().range(["red","green"]),
-          "avg_speed_avg": d3.scale.linear().range(["red","green"]),
-          "avg_speed_std": d3.scale.linear().range(["red","green"]),
-          "num_stops": d3.scale.linear().range(["green","#FF530D"]),
-          "congested_sum": d3.scale.linear().range(["green","red"])}
+          "avg_speed": d3.scale.linear().range(["red","yellow","green"]),
+          "speed": d3.scale.linear().range(["red","yellow","green"]),
+          "avg_speed_avg": d3.scale.linear().range(["red","yellow","green"]),
+          "avg_speed_std": d3.scale.linear().range(["red","yellow","green"]),
+          "num_stops": d3.scale.linear().range(["green","yellow","red"]),
+          "congested_sum": d3.scale.linear().range(["green","yellow", "red"])}
         , colorMetric = 'com_id'
         , sortMetric = $('.sort-by').val()
         , colorMetric = $('.color-by').val()
@@ -127,10 +127,22 @@ window.onload = function() {
         q.defer(loadFile, rootUrl + algorithm + "communities_pandas.tsv", "#loaderCom") //, gotCommunities) 
         q.defer(loadFile, rootUrl + algorithm + "communities.csv", "#loaderVeh") // , gotVehicles) 
         q.awaitAll(gotAllData);
-
+        if (algorithm.indexOf("Highway") != -1) {
+          areaRatio = 0.1;
+          margin_top = 10;
+        }
+        else if (algorithm.indexOf("Manhattan") != -1) {
+          areaRatio = 1;
+          margin_top = 5;
+        }
       }
       function gotAllData(error, results) {
         tip.hide();
+        console.log("res", results)
+        if (results.length == 1) {
+          gotVehicles(error, results[0]);
+          return;
+        }
         gotCommunities(error, results[0]);
         gotVehicles(error, results[1]);
       }
@@ -170,28 +182,52 @@ window.onload = function() {
 
 
       function gotCommunities(error, data) {
-        // console.log("got communities", data)
+        console.log("got communities", data)
         data = data.map(function(d) {
           com = {}
-          com.step = +d["('step', '')"]
-          com.com_id = +d["('com_id', '')"]
-          com.count = +d["('com_size', 'size')"]
-          com.range = +d["('range', '')"]
-          com.speed_avg = +d["('speed', 'mean')"]
-          com.speed_min = +d["('speed', 'amin')"]
-          com.speed_max = +d["('speed', 'amax')"]
-          com.speed_std = +d["('speed', 'std')"]
-          com.avg_speed_avg = +d["('avg_speed', 'mean')"]
-          com.avg_speed_min = +d["('avg_speed', 'amin')"]
-          com.avg_speed_max = +d["('avg_speed', 'amax')"]
-          com.avg_speed_std = +d["('avg_speed', 'std')"]
-          com.num_stops_sum = +d["('num_stops', 'sum')"]
-          com.num_stops_avg = +d["('num_stops', 'mean')"]
-          com.num_stops_min = +d["('num_stops', 'amin')"]
-          com.num_stops_max = +d["('num_stops', 'amax')"]
-          com.num_stops_std = +d["('num_stops', 'std')"]
-          com.congested_sum = +d["('congested', 'sum')"]
-          return com;
+          if ("('step', '')" in d) {
+            com.step = +d["('step', '')"]
+            com.com_id = +d["('com_id', '')"]
+            com.count = +d["('com_size', 'size')"]
+            com.range = +d["('range', '')"]
+            com.speed_avg = +d["('speed', 'mean')"]
+            com.speed_min = +d["('speed', 'amin')"]
+            com.speed_max = +d["('speed', 'amax')"]
+            com.speed_std = +d["('speed', 'std')"]
+            com.avg_speed_avg = +d["('avg_speed', 'mean')"]
+            com.avg_speed_min = +d["('avg_speed', 'amin')"]
+            com.avg_speed_max = +d["('avg_speed', 'amax')"]
+            com.avg_speed_std = +d["('avg_speed', 'std')"]
+            com.num_stops_sum = +d["('num_stops', 'sum')"]
+            com.num_stops_avg = +d["('num_stops', 'mean')"]
+            com.num_stops_min = +d["('num_stops', 'amin')"]
+            com.num_stops_max = +d["('num_stops', 'amax')"]
+            com.num_stops_std = +d["('num_stops', 'std')"]
+            com.congested_sum = +d["('congested', 'sum')"]
+          }
+          else if ("step" in d) {
+             // degree_mean degree_std  degree_amin degree_amax 
+             // x_amin  x_amax  y_amin  y_amax
+             // congested  num_stops_count
+            com.step = +d["step"]
+            com.com_id = +d["com_id"]
+            com.count = +d["com_size"]
+            com.range = +d["range"]
+            com.speed_avg = +d["speed_mean"]
+            com.speed_min = +d["speed_amin"]
+            com.speed_max = +d["speed_amax"]
+            com.speed_std = +d["speed_std"]
+            com.avg_speed_avg = +d["avg_speed_mean"]
+            com.avg_speed_min = +d["avg_speed_amin"]
+            com.avg_speed_max = +d["avg_speed_amax"]
+            com.avg_speed_std = +d["avg_speed_std"]
+            com.num_stops_sum = +d["num_stops"]
+            com.num_stops_avg = +d["num_stops_mean"]
+            com.num_stops_min = +d["num_stops_amin"]
+            com.num_stops_max = +d["num_stops_amax"]
+            com.congested_sum = +d["congested"]
+           }
+           return com;
         })
         communities= d3.nest()
           .key(function(d) { return d.step; })
@@ -220,13 +256,15 @@ window.onload = function() {
         initialiseSlider(firstStep/stepSize, (lastStep-1)/stepSize, 1, onStepUpdated)
          
         for (time in vehicles) {
-          var stepCommunities = communities[time].values;
-          vehicles[time].values.forEach(function(d) {
-            var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
-            d["avg_speed_std"] = com[0].avg_speed_std;
-            d["avg_speed_avg"] = com[0].avg_speed_avg;
-            d["congested_sum"] = com[0].congested_sum
-          })
+          if (communities.length > 0) {
+            var stepCommunities = communities[time].values;
+            vehicles[time].values.forEach(function(d) {
+              var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
+              d["avg_speed_std"] = com[0].avg_speed_std;
+              d["avg_speed_avg"] = com[0].avg_speed_avg;
+              d["congested_sum"] = com[0].congested_sum
+            })
+          }
         }
 
         updateColorScales(data);
@@ -273,6 +311,9 @@ window.onload = function() {
             if (scaleLen < 9) {
               scaleLen = 9
             }
+            colorScales[metric].domain([minVal, (maxVal-minVal)/2, maxVal])
+            
+
             var interval = (maxVal - minVal)/scaleLen;
             for (var i in d3.range(scaleLen)) {
               var value = minVal + i * interval;
