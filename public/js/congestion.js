@@ -138,7 +138,9 @@ window.onload = function() {
       }
       function gotAllData(error, results) {
         tip.hide();
-        console.log("res", results)
+        if (!results) {
+          return;
+        }
         if (results.length == 1) {
           gotVehicles(error, results[0]);
           return;
@@ -176,13 +178,13 @@ window.onload = function() {
           })
           .on("error", function(error) { 
             $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
+            cb(null, [])
           })
           .get();
       }
 
 
       function gotCommunities(error, data) {
-        console.log("got communities", data)
         data = data.map(function(d) {
           com = {}
           if ("('step', '')" in d) {
@@ -271,8 +273,9 @@ window.onload = function() {
         updateMaxArea(areaRatio);
         updateAreaScales(data);
 
-        showVehicles(vehicles[step].values)
-
+        if (vehicles && step in vehicles) {
+          showVehicles(vehicles[step].values)
+        }
         initialiseMonsterTracker();
 
         // createChart("#num-vehicles", "Step", "Number of vehicles", timeDimension, timeGroup, "step", "count", firstStep, lastStep)
@@ -345,7 +348,6 @@ window.onload = function() {
       }
 
       function initialiseSlider(firstStep, lastStep, stepSize, callback) {
-        // console.log("initialiseSlider",firstStep, lastStep, stepSize)
         $(".slider").slider()
         $(".slider").slider()
           .find(".ui-slider-handle")
@@ -362,7 +364,6 @@ window.onload = function() {
             })
       }
       function onStepUpdated() {
-        // console.log("step", step, "stepSize", stepSize, "time", time, vehicles)
         showVehicles(vehicles[step].values)
         dateLabel.text(formatStep(step))        
         updatestaticTooltips(step);
@@ -388,7 +389,6 @@ window.onload = function() {
         }
         stdDeviation = Math.sqrt(stdDeviation / groups.length).toFixed(2)
         // vehicleGroup.all().reduce(function(previousValue, currentValue) { return previousValue.sum + previousValue. });
-        // console.log("vehicleGroup", vehicleGroup.all(), "sum", sum, "avg", average)
         d3.select("#stats").append("div").html("Total number of vehicles: " + groups.length);
         d3.select("#stats").append("div").html("Average seconds traveled: " + average);
         d3.select("#stats").append("div").html("Standard deviation: " + stdDeviation);
@@ -400,7 +400,6 @@ window.onload = function() {
 
         var numBins = 30;
         var binWidth = (count.all().length) / numBins;
-        // console.log("binWidth", binWidth)
         var count = hist.group(function(d) {return Math.floor(d / binWidth) * binWidth;});
         drawHistogram("#hist-vehicles", "Trip duration", "Number of vehicles", hist, count, numBins, binWidth)
             
@@ -554,7 +553,6 @@ window.onload = function() {
       function updateColorScale(metric){
         for (var i in colorScales) {
           // if (i !== "avg_speed") {
-            // console.log("update color scale ", vehicles[step], i, d3.max(vehicles[step],function(d){ return d[metric] }))
             if (vehicles && vehicles[step].length > 0) {
               if (metric in vehicles[step][0]) {
                 colorScales[i].domain([0, d3.max(vehicles[step],function(d){ return d[metric] }) ])
@@ -700,7 +698,6 @@ window.onload = function() {
       //       ])
       //       .sortBy(orderValue)
       //       .order(d3.ascending);
-      //     // console.log(monsterTable);
       //     // dc.renderAll();
       //     monsterTable.render();
       //     updateMonsterCommunity()  
