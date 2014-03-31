@@ -1,0 +1,10 @@
+CROWDZ
+congestionSpeedThreshold 11.0
+speedHistoryLength 10
+filePath	/Users/agatagrzybek/workspace/ovnis/scenarios/Kirchberg/sumoOutput-accident/400-400-200/Kirchberg-400-400-200.dgs
+dir	/Users/agatagrzybek/workspace/ovnis/scenarios/Kirchberg
+communityOutputFile	/Users/agatagrzybek/www/vis/node-js-sample/public/data/Kirchberg/01042014/avgspeed_thres11_hist10/communities.csv
+graphOutputFile	/Users/agatagrzybek/www/vis/node-js-sample/public/data/Kirchberg/01042014/avgspeed_thres11_hist10/graph.txt
+algorithmOutputFile	/Users/agatagrzybek/www/vis/node-js-sample/public/data/Kirchberg/01042014/avgspeed_thres11_hist10/algorithm.csv
+algorithm	MobileSandSharc
+congestion	CongestionMeasure
