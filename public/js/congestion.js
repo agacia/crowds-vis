@@ -133,7 +133,10 @@ window.onload = function() {
         }
         else if (algorithm.indexOf("Manhattan") != -1) {
           areaRatio = 1;
-          margin_top = 5;
+          margin_top = 0;
+        } else if (algorithm.indexOf("Kirchberg") != -1) {
+          areaRatio = 0.5;
+          margin_top = 0;
         }
       }
       function gotAllData(error, results) {
@@ -232,6 +235,7 @@ window.onload = function() {
            }
            return com;
         })
+        console.log("data after", data)
         communities= d3.nest()
           .key(function(d) { return d.step; })
           .entries(data);
@@ -241,7 +245,7 @@ window.onload = function() {
       function gotVehicles(error, data) {
         data.forEach(function(d){
           d.step = +d.step;
-          d.avg_speed = +d.avg_speed
+          d.avg_speed = +d.timeMeanSpeed
         })
         vehicles = d3.nest()
           .key(function(d) { return d.step; })
@@ -284,6 +288,40 @@ window.onload = function() {
            
       }
 
+      populateAlgorithmOption()
+
+      function populateAlgorithmOption() {
+        var dirname = "Kirchberg/30032014/avgspeed_"
+        var algorithms = []
+        var thresholdStart = 1
+        var thresholdStep = 1
+        var thresholdStop = 2
+        var historylengthStart = 10
+        var historylengthStep = 10
+        var historylengthStop = 20
+        for (var i = thresholdStart; i < thresholdStop; i += thresholdStep) {
+          for (var j = historylengthStart; j < historylengthStop; j += historylengthStep) {
+            algorithms.push({"value":dirname+"thres"+i+"_hist"+j+"/", "title": "Kirchberg, threshold " + i +", history " + j} )
+          }
+        }
+         
+        var options = d3.select(".algorithm-select").selectAll("option")[0]
+        options = options.concat(algorithms)
+        algOption = d3.select(".algorithm-select").selectAll("option")
+          .data(options)
+          .enter()
+          .append("option")
+            .attr("value", function(d) { return d.value })
+            .text(function(d) { return d.title })
+
+        $('.algorithm-select').on('change', function(){
+          var newAlgorithm = $(this).val()
+          if (algorithm === newAlgorithm) return
+          algorithm = newAlgorithm;
+          init();  
+        })
+            
+      }
 
       function updateAreaScales(data) {
         minX = d3.min(data, function(d) {return d.x; })
@@ -292,6 +330,8 @@ window.onload = function() {
         maxY = d3.max(data, function(d) {return d.y; })
         xScale.domain([minX,maxX])
         yScale.domain([minY,maxY])
+        console.log("minY,maxY", minY,maxY, "minX,maxX", minX,maxX)
+        console.log("scaleY", yScale(minY), yScale(maxY), "scaleX", xScale(minX), xScale(maxX))
       }
       
       function updateAreaScale(metric){
@@ -316,9 +356,7 @@ window.onload = function() {
               scaleLen = 9
             }
             colorScales[metric].domain([minVal, (maxVal-minVal)/2, maxVal])
-            
-
-            var interval = (maxVal - minVal)/scaleLen;
+                        var interval = (maxVal - minVal)/scaleLen;
             for (var i in d3.range(scaleLen)) {
               var value = minVal + i * interval;
               colors.push({"value":Math.round(value), "color":colorScales[metric](value)})
@@ -879,7 +917,10 @@ window.onload = function() {
       function updatePos(node){
         node
           .attr('transform', function(d){  
-            return 'translate(' + xScale(d.x) + ',' + yScale(maxY - d.y) + ')'
+            // if (algorithm.indexOf("Kirchberg") != -1) {
+            //   return 'translate(' + xScale(d.x) + ',' + yScale(d.y) + ')'
+            // }
+            return 'translate(' + xScale(d.x) + ',' + (yScale(maxY) - yScale(d.y)) + ')'
           })
         node.select('circle').attr('r', radius)
         return node
@@ -961,12 +1002,6 @@ window.onload = function() {
         updateColorScale(colorMetric)
         d3.selectAll('.vis .node').transition().duration(1000).call(updateColor)
       })
-      $('.algorithm-select').on('change', function(){
-        var newAlgorithm = $(this).val()
-        if (algorithm === newAlgorithm) return
-        algorithm = newAlgorithm;
-        init();  
-      })
       $(window).resize(function(){
         // width = window.innerWidth
         // height = window.innerHeight
@@ -992,7 +1027,10 @@ window.onload = function() {
             if (!node) return
             node.each(function(d, i){
               var prev_z = d.fisheye && d.fisheye.z || 1
-              scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
+              scaledD = {x: xScale(d.x), y: (yScale(maxY) - yScale(d.y)), z: 1}
+              // if (algorithm.indexOf("Kirchberg") != -1) {
+              //   scaledD = {x: xScale(d.x), y: yScale(d.y), z: 1}
+              // }
               d.fisheye = fisheye(scaledD)
               d.fisheye.prev_z = prev_z
             })
@@ -1004,13 +1042,22 @@ window.onload = function() {
               node.each(function(d){
                 if( !max || d.fisheye.z > max.fisheye.z) { max = d; maxNode = this }
               })
-              var scaledD = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1}
+              var scaledD = {x: xScale(d.x), y: (yScale(maxY) - yScale(d.y)), z: 1}
+              // if (algorithm.indexOf("Kirchberg") != -1) {
+              //   scaledD = {x: xScale(d.x), y: yScale(d.y), z: 1}
+              // } 
               if(topNode !== maxNode) updateTopNode(maxNode)
             })
           }
         }).on('mouseleave', function(d){
           d3.select('.tooltip').style('display', 'none')
-          node.each(function(d, i){ d.fisheye = {x: xScale(d.x), y: yScale(maxY - d.y), z: 1} })
+          node.each(function(d, i){ 
+            var yy = yScale(maxY) - yScale(d.y);
+            // if (algorithm.indexOf("Kirchberg") != -1) {
+            //   yy = d.y;
+            // }
+            d.fisheye = {x: xScale(d.x), y: yy, z: 1} 
+          })
           .filter(function(d){ return d.fisheye.z !== d.fisheye.prev_z })
           .call(setFisheyePos)
         })
