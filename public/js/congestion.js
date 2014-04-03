@@ -84,7 +84,8 @@ window.onload = function() {
             d.order = order++;
             return d;
         }
-        , stepsOffset = 1689
+        // , stepsOffset = 1689
+        , stepsOffset = 0
         , formatStep = function(step) {
           var seconds = step*stepSize + stepsOffset
           // if ((lastStep - firstStep) > 120) {
