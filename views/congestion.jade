@@ -38,8 +38,12 @@ block content
 						option(value="Manhattan/27032014/timemean_last90_11/reduced_") manhattan avg - 11kmh
 						option(value="Manhattan/27032014/timemean_last90_20/reduced_") manhattan avg - 20kmh
 
+						option(value="Kirchberg/01042014-inst-400-200-400/avgspeed_thres11_hist10/") kirchberg accident inst 400-200-400 - 11kmh
+						option(value="Kirchberg/01042014-timemean-400-200-400/avgspeed_thres11_hist10/") kirchberg accident timemean 400-200-400 - 11kmh
 						
-						option(value="Kirchberg/01042014/avgspeed_thres11_hist10/") kirchberg accident inst - 11kmh
+						option(value="Kirchberg/01042014-900-50-50-50PR/avgspeed_thres11_hist10/") kirchberg accident 900-50-50 inst 50PR - 11kmh
+						option(value="Kirchberg/01042014-900-50-50-100PR/avgspeed_thres11_hist10/") kirchberg accident 900-50-50 inst 100PR - 11kmh
+						
 						//-option(value="Kirchberg/01042014/avgspeed_thres8_hist10/") kirchberg accident inst - 8kmh
 						
 						//-(value="Kirchberg/30032014/timemean_last0_0/") kirchberg accident 0 - 0kmh
@@ -105,6 +109,19 @@ block content
 
 			#communities
 				//- tracker
+				div
+					label.originators.tracker Filter inst speed
+						<span class='filter toggle'><input type='checkbox' name='filterSpeed' id='filterSpeedToggle' /></span>
+					
+				div
+					label.originators.tracker Filter community average speed
+						<span class='filter toggle'><input type='checkbox' name='filterCommunityAvgSpeed' id='filterCommunityAvgSpeedToggle' /></span>
+				div
+					label.originators.tracker Filter timemean speed
+						<span class='filter toggle'><input type='checkbox' name='filterTimeMeanSpeed' id='filterTimeMeanSpeedToggle' /></span>
+				div
+					label.originators.tracker Filter community average timemean speed
+						<span class='filter toggle'><input type='checkbox' name='filterAvgCommunityTimeMeanSpeed' id='filterAvgCommunityTimeMeanSpeedToggle' /></span>		
 				div
 					label.originators.tracker Show originators
 						<span class='toggle'><input type='checkbox' name='showOriginators' id='showOriginatorsToggle' /></span>

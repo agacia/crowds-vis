@@ -43,6 +43,7 @@ window.onload = function() {
         , algorithm = $('.algorithm-select').val()
         , firstStep = 0, step = 0, lastStep = 0, stepSize = 0
         , id = 0, order = 0
+        , filter = ""
         , radius = function(d) { 
             var metric = sortMetric
             var scale = 1 
@@ -188,7 +189,7 @@ window.onload = function() {
 
 
       function gotCommunities(error, data) {
-        console.log("data", data)
+        console.log("got communities data", data)
         data = data.map(function(d) {
           com = {}
           if ("('step', '')" in d) {
@@ -235,7 +236,6 @@ window.onload = function() {
            }
            return com;
         })
-        console.log("data after", data)
         communities= d3.nest()
           .key(function(d) { return d.step; })
           .entries(data);
@@ -267,9 +267,12 @@ window.onload = function() {
             var stepCommunities = communities[time].values;
             vehicles[time].values.forEach(function(d) {
               var com = stepCommunities.filter(function(c) { return c.com_id == d.com_id}) 
-              d["avg_speed_std"] = com[0].avg_speed_std;
-              d["avg_speed_avg"] = com[0].avg_speed_avg;
-              d["congested_sum"] = com[0].congested_sum
+              if(com.length > 0) {
+                d["speed_avg"] = com[0].speed_avg;
+                d["avg_speed_std"] = com[0].avg_speed_std;
+                d["avg_speed_avg"] = com[0].avg_speed_avg;
+                d["congested_sum"] = com[0].congested_sum
+              }
             })
           }
         }
@@ -330,8 +333,6 @@ window.onload = function() {
         maxY = d3.max(data, function(d) {return d.y; })
         xScale.domain([minX,maxX])
         yScale.domain([minY,maxY])
-        console.log("minY,maxY", minY,maxY, "minX,maxX", minX,maxX)
-        console.log("scaleY", yScale(minY), yScale(maxY), "scaleX", xScale(minX), xScale(maxX))
       }
       
       function updateAreaScale(metric){
@@ -543,6 +544,9 @@ window.onload = function() {
         });
       }
       function showVehicles(veh) { 
+        if (filter && filter!="") {
+          veh = veh.filter(function(d){ return d[filter] < 5; })
+        }
         var exitNodes = vis.selectAll('.node').data(veh, dataKey).exit()
         exitNodes.remove();
         newNodes = vis.selectAll('.node').data(veh, dataKey)
@@ -636,7 +640,25 @@ window.onload = function() {
             vis.selectAll(".node").classed("originator", false)
           }
         });
-        
+        // initialize filters
+        $(".filter.toggle").on('click', function(d) {
+          if ($("#filterSpeedToggle").prop('checked')) {
+            filter = "speed"
+          } 
+          else if ($("#filterCommunityAvgSpeedToggle").prop('checked')) {
+            filter = "speed_avg"
+          } 
+          else if ($("#filterTimeMeanSpeedToggle").prop('checked')) {
+            filter = "timeMeanSpeed"
+          }
+          else if ($("#filterAvgCommunityTimeMeanSpeedToggle").prop('checked')) {
+            filter = "avg_speed_avg"
+          }
+          else {
+            filter = ""
+          }
+          showVehicles(vehicles[step].values)
+        });
       }
       function orderValue(p) {
         return p[monsterSortMetric];
@@ -875,8 +897,8 @@ window.onload = function() {
               var com = stepCommunities.filter(function(c, i) { return c.com_id == trackedCommunityId; })[0];
               staticTooltip.select('.speed_avg').text('Average speed: ' + parseFloat(com["speed_avg"]).toFixed(2))
               staticTooltip.select('.speed_std').text('Std speed: ' + parseFloat(com["speed_std"]).toFixed(2))
-              staticTooltip.select('.avg_speed_avg').text('Average average speed: ' + parseFloat(com["avg_speed_avg"]).toFixed(2))
-              staticTooltip.select('.avg_speed_std').text('Std average speed: ' + parseFloat(com["avg_speed_std"]).toFixed(2))
+              staticTooltip.select('.avg_speed_avg').text('Community average speed: ' + parseFloat(com["avg_speed_avg"]).toFixed(2))
+              staticTooltip.select('.avg_speed_std').text('Community std average speed: ' + parseFloat(com["avg_speed_std"]).toFixed(2))
               staticTooltip.select('.area').text('area radius: ' + parseFloat(com.range).toFixed(2))
               staticTooltip.select('.num_stops_sum').text('Number of stops: ' + com.num_stops_sum)
               staticTooltip.select('.congested_sum').text('Number of congestions: ' + com.congested_sum)

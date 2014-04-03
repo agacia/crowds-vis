@@ -199,25 +199,49 @@ window.onload = function() {
       function gotCommunities(error, data) {
         data = data.map(function(d) {
           com = {}
-          com.step = +d["('step', '')"]
-          com.com_id = +d["('com_id', '')"]
-          com.count = +d["('com_size', 'size')"]
-          com.range = +d["('range', '')"]
-          com.speed_avg = +d["('speed', 'mean')"] > 0 ? +d["('speed', 'mean')"] : 0
-          com.speed_min = +d["('speed', 'amin')"]
-          com.speed_max = +d["('speed', 'amax')"]
-          com.speed_std = +d["('speed', 'std')"]
-          com.avg_speed_avg = +d["('avg_speed', 'mean')"] > 0 ? +d["('avg_speed', 'mean')"] : 0
-          com.avg_speed_min = +d["('avg_speed', 'amin')"]
-          com.avg_speed_max = +d["('avg_speed', 'amax')"]
-          com.avg_speed_std = +d["('avg_speed', 'std')"]
-          com.num_stops_sum = +d["('num_stops', 'sum')"]
-          com.num_stops_avg = +d["('num_stops', 'mean')"] > 0 ? +d["('num_stops', 'mean')"] : 0
-          com.num_stops_min = +d["('num_stops', 'amin')"]
-          com.num_stops_max = +d["('num_stops', 'amax')"]
-          com.num_stops_std = +d["('num_stops', 'std')"]
-          com.congested_sum = +d["('congested', 'sum')"]
-          return com;
+          if ("('step', '')" in d) {
+            com.step = +d["('step', '')"]
+            com.com_id = +d["('com_id', '')"]
+            com.count = +d["('com_size', 'size')"]
+            com.range = +d["('range', '')"]
+            com.speed_avg = +d["('speed', 'mean')"]
+            com.speed_min = +d["('speed', 'amin')"]
+            com.speed_max = +d["('speed', 'amax')"]
+            com.speed_std = +d["('speed', 'std')"]
+            com.avg_speed_avg = +d["('avg_speed', 'mean')"]
+            com.avg_speed_min = +d["('avg_speed', 'amin')"]
+            com.avg_speed_max = +d["('avg_speed', 'amax')"]
+            com.avg_speed_std = +d["('avg_speed', 'std')"]
+            com.num_stops_sum = +d["('num_stops', 'sum')"]
+            com.num_stops_avg = +d["('num_stops', 'mean')"]
+            com.num_stops_min = +d["('num_stops', 'amin')"]
+            com.num_stops_max = +d["('num_stops', 'amax')"]
+            com.num_stops_std = +d["('num_stops', 'std')"]
+            com.congested_sum = +d["('congested', 'sum')"]
+          }
+          else if ("step" in d) {
+             // degree_mean degree_std  degree_amin degree_amax 
+             // x_amin  x_amax  y_amin  y_amax
+             // congested  num_stops_count
+            com.step = +d["step"]
+            com.com_id = +d["com_id"]
+            com.count = +d["com_size"]
+            com.range = +d["range"]
+            com.speed_avg = +d["speed_mean"]
+            com.speed_min = +d["speed_amin"]
+            com.speed_max = +d["speed_amax"]
+            com.speed_std = +d["speed_std"]
+            com.avg_speed_avg = +d["avg_speed_mean"] || +d["timeMeanSpeed_mean"]
+            com.avg_speed_min = +d["avg_speed_amin"] || +d["timeMeanSpeed_amin"]
+            com.avg_speed_max = +d["avg_speed_amax"] || +d["timeMeanSpeed_amax"]
+            com.avg_speed_std = +d["avg_speed_std"] || +d["timeMeanSpeed_std"]
+            com.num_stops_sum = +d["num_stops"]
+            com.num_stops_avg = +d["num_stops_mean"]
+            com.num_stops_min = +d["num_stops_amin"]
+            com.num_stops_max = +d["num_stops_amax"]
+            com.congested_sum = +d["congested"]
+           }
+           return com;
         })
         
         updateColorScales(data);
