@@ -55,7 +55,7 @@ window.onload = function() {
       , radius = function(d) { 
           var metric = sortMetric
           if (metric === "None") {
-            return 5;
+            return 3;
           }
           var scale = 1;
           return areaToRadius(areaScale(d[metric]), scale) 

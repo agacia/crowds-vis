@@ -33,6 +33,10 @@ exports.traffic = function(req, res){
   res.render('traffic', { title: 'Traffic' });
 };
 
+exports.community_detection = function(req, res){
+  res.render('community_detection', { title: 'Community detection' });
+};
+
 exports.highway = function(req, res){
   res.render('highway', { title: 'Highway' });
 };

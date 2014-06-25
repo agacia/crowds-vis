@@ -45,6 +45,15 @@ block content
 						//-option(value="Highway/600/nsim/") highway - nsim
 						//-option(value="Highway/600/dsd/") highway - nsim dsd
 						//-option(value="Highway/600/dsd_only/") highway - dsd only
+
+
+						option(value="Highway/20072014/no_congestion/SandSharc_oryg/") Highway - no-congestion SandSharc_oryg
+						option(value="Highway/20072014/no_congestion/MobileSandSharc_oryg/")  Highway - no-congestion MobileSandSharc_oryg
+						option(value="Highway/20072014/no_congestion/Crowdz/")  Highway - no-congestion Crowdz
+						option(value="Highway/20072014/congestion/SandSharc_oryg/") Highway - congestion SandSharc_oryg
+						option(value="Highway/20072014/congestion/MobileSandSharc_oryg/")  Highway - congestion MobileSandSharc_oryg
+						option(value="Highway/20072014/congestion/Crowdz/")  Highway - congestion Crowdz
+
 						option(value="Highway/14032014/newsawsharc_weighted/") highway - newsawsharc_weighted
 						option(value="Manhattan/14032014/newsawsharc_weighted/reduced_") manhattan - newsawsharc_weighted
 
@@ -91,6 +100,12 @@ block content
 						<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
 					span.slider
 
+		.col-xs-12.col-sm-12.vis-column
+			#visualisation
+				.legend
+					p Color legend:
+				#kinetic-container
+
 		.col-xs-12.col-sm-7.vis-column
 			#loaderVeh.loader
 				.loader-content
@@ -99,10 +114,7 @@ block content
 					h4 Loading data...
 					h5.size
 			.row
-				#visualisation
-				.legend
-					p Color legend:
-				#kinetic-container
+				
 
 		.col-xs-12.col-sm-5
 			#loaderCom.loader

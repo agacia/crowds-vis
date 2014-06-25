@@ -1,0 +1,63 @@
+extends layout
+
+block styles
+	link(rel='stylesheet', href='/css/community_detection.css')
+
+block content
+
+	#wrapper 
+		#header 
+			h3.title Community detection on example networks
+			.dashboard
+				span.project-info-icon.glyphicon.glyphicon-info-sign
+				.project-info 
+					.title 
+						h3 Project information
+						button(type="button", class="close glyphicon glyphicon-remove")
+					.body 
+						h4 Description
+						p Visualisation of dynamic community in dynamic graphs.
+						p Each dot represents a postion of an individual. The color indicates a community that the individual belongs to.
+						p Algorithm: SandSharc with stability metric: link duration (Label Propagation Algorithm).
+						h4 Usage
+						p 1. Select on of the scenarios
+						p 3. Choose the dot's size metric based on community size, community score and the node degree (number of neighbors).
+						p 4. Click Play or move timeline to see the evolution of communities.
+						p 5. Click on a dot to track the details of the individual.
+					.bg
+				.col-xs-12.col-sm-12.vis-column
+					.row
+						span.algorithm Scenario: 
+							select(class="algorithm-select")
+								option(value="Guillaume/highway-120-3/") Highway
+								option(value="Guillaume/mall/") Shopping Mall
+								option(value="Guillaume/cabs_10000/") Cabs
+						span Color by:
+						select(class="color-by")
+							option(value="com_id") Community id
+						span Size by: 
+							select(class="sort-by")
+								option(value="None") None
+								option(value="com_size") Community size 
+								option(value="com_score") Community score
+								option(value="degree") Degree 
+					div
+						<a class="playbutton play icon">Pause / Play</a>
+						span.player
+							<img id="play" src="imgs/play.png" width="100" height="100" style="display:none;"/>
+							<img id="pause" src="imgs/pause.png" width="100" height="100" style="display:none;"/>
+						span
+							span(class="slider")
+				
+		#container
+			#staticTooltips
+			#visualisation
+block scripts
+	<script src="js/community_detection.js"></script>
+	<script src="js/vendor/fisheye.js"></script>
+	<script src="js/tooltip.js"></script>
+	<script src="js/vendor/crossfilter.min.js"></script>
+	<script src="js/vendor/dc.js"></script>
+	<script src="js/tooltip.js"></script>
+	<script src="js/vendor/underscore.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>

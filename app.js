@@ -36,6 +36,7 @@ app.get('/multiple', routes.multiple);
 app.get('/single', routes.single);
 app.get('/single-cross', routes.singlecross);
 app.get('/highway', routes.highway);
+app.get('/community_detection', routes.community_detection);
 app.get('/communities', routes.communities);
 app.get('/dynamism', routes.dynamism);
 app.get('/congestion', routes.congestion);
