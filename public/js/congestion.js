@@ -26,6 +26,7 @@ window.onload = function() {
         , xScale = d3.scale.linear().range([margin, max_area - margin])
         , yScale = d3.scale.linear().range([margin_top, max_area - margin_bottom - margin_top])
         , sizeScale = d3.scale.linear().range([100,200])
+        , comCircleScale = d3.scale.linear().range([0,100])
         , maxY = 0
         , areaToRadius = function(area, scale){ 
             var scaled = scale * area;
@@ -124,6 +125,8 @@ window.onload = function() {
         , monsterSortMetric = "count"
         , tip = new InfoTooltip()
         , communities = []
+        , related_links = {}
+
 
       if ( window.self !== window.top ){
         // we're in an iframe!
@@ -142,6 +145,7 @@ window.onload = function() {
         var q = queue(1);
         q.defer(loadFile, rootUrl + algorithm + "communities_pandas.csv", "#loaderCom") //, gotCommunities) 
         q.defer(loadFile, rootUrl + algorithm + "communities.csv", "#loaderVeh") // , gotVehicles) 
+        q.defer(loadJSON, rootUrl + "Manhattan/Network_v4.json") // , gotVehicles) 
         q.awaitAll(gotAllData);
        
         if (algorithm.indexOf("Highway") != -1) {
@@ -162,8 +166,10 @@ window.onload = function() {
       function gotAllData(error, results) {
         console.log(error, results)
         tip.hide();
+        gotNetwork(error, results[2]);
         gotCommunities(error, results[0]);
         gotVehicles(error, results[1]);
+        
       }
 
       function loadFile(url, loader, cb) {
@@ -200,6 +206,63 @@ window.onload = function() {
           .get();
       }
 
+      function loadJSON(url, cb) {
+        var xhr = d3.json(url)
+          .on("load", function(data) { 
+            //console.log(data)
+            // $(loader).hide();
+            // tip.hide();
+            // $('.error').html("");
+            // // d3.select('body').selectAll('.chart').selectAll().remove()
+            // d3.select(".data-status").html("Loaded " + data.length + " rows of data...")
+            cb(null, data)
+          })
+          .on("error", function(error) { 
+            // $('.error').html("No data for " + scenario + " with algorithm " + algorithm + " " + url);
+            cb(null, "error")
+          })
+          .get();
+      }
+
+      function gotNetwork(error, data) {
+        network = []
+        data.forEach(function(row,i){
+          row.forEach(function(inter,j){
+            if (inter.in != undefined) {
+              network.push([(j)*220,(i)*220, inter])  
+            } 
+          })
+        })
+
+        // console.log(network)
+        //draws all the links in the network
+        //var linkGroup = d3.select("#mysvg").append("g")
+        network.forEach(function(int_obj){
+
+          int_obj[2].in.forEach(function(link){
+
+            var link_ori = network.filter(function(intersection){
+              return (intersection[2].out.indexOf(link) > -1 )
+            })
+
+            if (link_ori.length > 0) { 
+              // var link_coordinates = [{x:link_ori[0][0],y:link_ori[0][1]},{x:int_obj[0], y:int_obj[1]}]
+              // var orientation = Math.atan2(link_coordinates[1].y-link_coordinates[0].y,link_coordinates[1].x-link_coordinates[0].x)
+              // link_coordinates.forEach(function(xy){
+              //   xy.x = xy.x + 10*Math.sin(orientation)
+              //   xy.y = xy.y - 10*Math.cos(orientation)
+              // })
+
+              related_links[link] = int_obj[2].in
+              // linkGroup.append("path").datum({"geometry":link_coordinates,"intersection":int_obj})
+              //   .attr("d",function(d) {return line(d.geometry)})
+              //   .attr("id","link"+link)
+              //   .attr("class","link")
+            }
+          })
+        })
+      console.log(Object.keys(related_links).length)
+      }
 
       function gotCommunities(error, data) {
         // console.log("got communities data", data)
@@ -245,6 +308,18 @@ window.onload = function() {
             com.num_stops_avg = +d["num_stops_mean"]
             com.num_stops_min = +d["num_stops_amin"]
             com.num_stops_max = +d["num_stops_amax"]
+            com.x_min = +d["x_amin"]
+            com.x_max = +d["x_amax"]
+            com.y_min = +d["y_amin"]
+            com.y_max = +d["y_amax"]
+            com.center_x = (com.x_min + com.x_max)/2
+            com.center_y = (com.y_min + com.y_max)/2
+            com.center_radius = (Math.abs(com.x_min - com.x_max) + Math.abs(com.y_min - com.y_max))/2
+            com.vehicles = []
+            com.links = []
+            com.ext_links = []
+            com.indexHomoCongestion = 0
+            
             com.congested_sum = +d["congested"]
            }
            return com;
@@ -285,10 +360,25 @@ window.onload = function() {
                 d["avg_speed_std"] = com[0].avg_speed_std;
                 d["avg_speed_avg"] = com[0].avg_speed_avg;
                 d["congested_sum"] = com[0].congested_sum
+                com[0].vehicles.push(d.id)
+                com[0].links.push(d.link_id)
               }
+            })
+            stepCommunities.forEach(function(com){
+              com.links = d3.set(com.links).values()
+
+              var extended_links =[]
+              com.links.forEach(function(link_id){
+                extended_links = extended_links.concat(related_links[link_id].map(function(d){return d.toString()}))
+              }) 
+
+              com.ext_links = d3.set(extended_links).values();
+
+              com.indexHomoCongestion = +(com.links.length)/(com.ext_links.length)
             })
           }
         }
+        console.log(communities)
 
         updateColorScales(data);
         updateSizeScales(data);
@@ -345,8 +435,14 @@ window.onload = function() {
         maxX = d3.max(data, function(d) {return d.x; })
         minY = d3.min(data, function(d) {return d.y; })
         maxY = d3.max(data, function(d) {return d.y; })
+        // console.log(minX,maxX, minY,maxY)
         xScale.domain([minX,maxX])
         yScale.domain([minY,maxY])
+
+        comCircleScale.domain([0,1000])
+        // comCircleScale.range([0,xScale(1)-xScale(0)])
+
+
       }
 
       function updateSizeScales(data) {
@@ -429,6 +525,7 @@ window.onload = function() {
         updatestaticTooltips(step);
         createMonsters(step);
       }
+
       function drawVehicleCharts(cf) {
         var vehicleDimension = cf.dimension(function(d) {
           d.speed = +d.speed;
@@ -465,6 +562,7 @@ window.onload = function() {
             
         d3.select(".data-status").style("display", "none")
       } 
+
       function drawHistogram(selection, xLabel, yLabel, dimension, group, nBins, binWidth) {
         counts = group.all();
         var xMin = counts[0].key
@@ -563,7 +661,85 @@ window.onload = function() {
             // moveChart.filter(chart.filter());
         });
       }
+
+      function comKey(d){
+        return d.com_id
+      }
+
+      function updateComCirclePos(node){
+        node
+          .attr('transform', function(d){  
+            // if (algorithm.indexOf("Kirchberg") != -1) {
+            //   return 'translate(' + xScale(d.x) + ',' + yScale(d.y) + ')'
+            // }
+            return 'translate(' + xScale(d.center_x) + ',' + (yScale(maxY) - yScale(d.center_y)) + ')'
+          })
+        node.select('circle').attr('r', function(d){
+          //console.log(d.center_radius, xScale(d.center_radius)); return 10;
+          return comCircleScale(d.center_radius)
+        })
+
+        return node
+      }
+
+      function updateText(node){
+        node.select("text").text(function(d){return (d.indexHomoCongestion*100).toFixed(0)+"%" })
+          .style("font-size", 20).attr("dx",-15).attr("dy",5)
+
+      }
+
+      function showCommunities(com){
+        //console.log(related_links)
+
+        var bind = vis.selectAll('.com').data(com, comKey)
+        bind.exit().remove();
+        var newNodes = bind.enter().append("g")
+          .attr("class","com")
+
+        // var exitNodes = vis.selectAll('.com').data(com, comKey).exit()
+        // exitNodes.remove();
+        // newNodes = vis.selectAll('.com').data(com, comKey)
+        //   .enter()
+        //     .append('g')
+        //     .attr('class', 'com')  
+        
+        newNodes.on('click', function(){
+          var node // = d3.select('.node.highlighted').classed('highlighted', false).node()
+            , sel = d3.select(this)
+
+
+          d3.selectAll(".selected").attr("classed", "sel")  
+          if(sel.node() !== node) sel.classed('selected', !d3.select(this).classed('selected'))
+          var startTracking = d3.select(this).classed('selected')
+          if (startTracking) {
+            //d3.select('.staticTooltip.vehicle').style('display', 'block')
+            //d3.select('.staticTooltip.community').style('display', 'block')
+            //trackedNode = sel
+            trackedCommunityId = sel.data()[0].com_id
+            updatestaticTooltips(step);
+          }
+          else {
+            trackedNode = 0
+            d3.select('.staticTooltip.vehicle').style('display', 'none')
+          }
+        })
+        newNodes.append('circle')
+        newNodes.append("text")
+
+
+        var com_circles = vis.selectAll('.com')
+        com_circles
+          .call(updateComCirclePos) 
+          .call(updateColor)
+          .call(updateText)
+        // fisheyeEffect(vis)
+
+      }
+
       function showVehicles(veh) { 
+        console.log(communities[step].values)
+        showCommunities(communities[step].values)
+
         if (filter && filter!="") {
           veh = veh.filter(function(d){ return d[filter] < 5; })
         }

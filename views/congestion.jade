@@ -29,52 +29,9 @@ block content
 			.row
 				span.algorithm.col-xs-12.col-sm-4 Algorithm:
 					select(class="algorithm-select")
-						//-option(value="Manhattan/20072014/instantspeed/SandSharc_oryg/reduced_") Manhattan - instantspeed SandSharc_oryg
-						//-option(value="Manhattan/20072014/instantspeed/MobileSandSharc_oryg/reduced_")  Manhattan - instantspeed MobileSandSharc_oryg
-						//-option(value="Manhattan/20072014/instantspeed/Crowdz/reduced_")  Manhattan - instantspeed Crowdz
-						//-option(value="Manhattan/20072014/instantspeed/StableCrowdz/reduced_")  Manhattan - instantspeed StableCrowdz
-						//-option(value="Manhattan/20072014/timemeanspeed90/SandSharc_oryg/reduced_") Manhattan - timemeanspeed90 SandSharc_oryg
-						//-option(value="Manhattan/20072014/timemeanspeed90/MobileSandSharc_oryg/reduced_")  Manhattan - timemeanspeed90 MobileSandSharc_oryg
-						//-option(value="Manhattan/20072014/timemeanspeed90/Crowdz/reduced_")  Manhattan - timemeanspeed90 Crowdz
-						
-						option(value="Manhattan/20072014/instantspeed/SandSharc_link_duration/reduced_") Manhattan - SandSharc_link_duration
-						option(value="Manhattan/20072014/instantspeed/SandSharc_mobility/reduced_")  Manhattan - SandSharc_mobility (instant speed)
-						option(value="Manhattan/20072014/instantspeed/SandSharc_nostability/reduced_")  Manhattan - SandSharc_nostability 
-						
-
-						
-						option(value="Highway/20072014/no_congestion/SandSharc_noStability/crowds_") Highway - no-congestion SandSharc_oryg no stability
-						//-option(value="Highway/20072014/no_congestion/SandSharc_oryg/") Highway - no-congestion SandSharc_oryg link duration
-						//-option(value="Highway/20072014/no_congestion/MobileSandSharc_oryg/")  Highway - no-congestion SandSharc_oryg mobility
-						//-option(value="Highway/20072014/no_congestion/Crowdz/")  Highway - no-congestion Crowdz
-						//-option(value="Highway/20072014/no_congestion/StableCrowdz/crowds_")  Highway - no-congestion StableCrowdz
-						//-option(value="Highway/20072014/congestion/SandSharc_oryg/") Highway - congestion SandSharc_oryg
-						//-option(value="Highway/20072014/congestion/MobileSandSharc_oryg/")  Highway - congestion MobileSandSharc_oryg
-						//-option(value="Highway/20072014/congestion/Crowdz/")  Highway - congestion Crowdz
-						//-option(value="Highway/20072014/congestion/StableCrowdz/crowds_")  Highway - congestion StableCrowdz
-						
-						
-
-						//- without emergance
-						//-option(value="Manhattan/27032014/timemean_last90_11/reduced_") manhattan avg - 11kmh
-						//-option(value="Manhattan/27032014/timemean_last90_20/reduced_") manhattan avg - 20kmh
-						//-option(value="Kirchberg/01042014-inst-400-200-400/avgspeed_thres11_hist10/") kirchberg accident inst 400-200-400 - 11kmh
-						//-option(value="Kirchberg/01042014-timemean-400-200-400/avgspeed_thres11_hist10/") kirchberg accident timemean 400-200-400 - 11kmh
-						
-						//- final emergance mode for kirchberg 400-200-400
-						//-option(value="Kirchberg/05042014-400-200-400-emergence/avgspeed_thres11_hist10/") kirchberg 400-200-400 th 11 hist 10
-						//-option(value="Kirchberg/05042014-00-200-400-emergence/avgspeed_thres5_hist10/") kirchberg 400-200-400 th 5 hist 10
-						//-option(value="Kirchberg/05042014-00-200-400-emergence/avgspeed_thres5_hist2/") kirchberg 400-200-400 th 5 hist 2
-						
-						//- final emergance mode for kirchberg 900-50-50
-						//-option(value="Kirchberg/06042014-900-50-50-100PR-emergence/avgspeed_thres11_hist10/") kirchberg 900-50-50 100% th 11 hist 10
-						//-option(value="Kirchberg/06042014-900-50-50-50PR-emergence/avgspeed_thres11_hist10/") kirchberg 900-50-50 50% th 11 hist 10
-						//- TrafficEQ
-						//-option(value="Kirchberg/09042014-Kirchberg-TrafficEQ/instant_thres5_hist10/") kirchberg TrafficEQ 900-50-50 th 5 hist 10
-						//-option(value="Kirchberg/09042014-Kirchberg-TrafficEQ/timemean_thres10_hist10/") kirchberg TrafficEQ 900-50-50 timemean th 10 hist 10
-						//- final emergance mode for Manhattan
-						//-option(value="Manhattan/10042014-emergence/avgspeed_thres11_hist90/reduced_") manhattan th 11 hist 90
-						
+						option(value="Manhattan/10-20/reduced_")  Manhattan 10-20 (20 mins)
+						option(value="Manhattan/15-25/reduced_")  Manhattan 15-25 (20 mins)
+						option(value="Manhattan/20-30/reduced_")  Manhattan 20-30 (14 mins)
 
 				span.col-xs-12.col-sm-3 Color by:
 					select(class="color-by")
@@ -159,16 +116,10 @@ block content
 									a(type="button", class="sort glyphicon glyphicon-sort") Name
 								th.count
 									a(type="button", class="sort glyphicon glyphicon-sort") Size
-								//-th.speed_avg
-								//-	a(type="button", class="sort glyphicon glyphicon-sort") Average speed
-								//-th.speed_std
-								//-	a(type="button", class="sort glyphicon glyphicon-sort") Stddev speed
 								th.avg_speed_avg
 									a(type="button", class="sort glyphicon glyphicon-sort") Average avg speed
 								th.avg_speed_std
 									a(type="button", class="sort glyphicon glyphicon-sort") Stddev avg speed 
-								//-th.num_stops_avg
-								//-	a(type="button", class="sort glyphicon glyphicon-sort") Number of stops
 								th.congested_sum
 									a(type="button", class="sort glyphicon glyphicon-sort") Number of congestions
 								th Color
@@ -188,7 +139,6 @@ block scripts
 	<script src="js/vendor/fisheye.js"></script>
 	<script src="js/vendor/crossfilter.min.js"></script>
 	<script src="js/vendor/dc.js"></script>
-	//-<script src="js/vendor/gauss.js"></script>
 	<script src="js/tooltip.js"></script>
 	<script src="js/vendor/underscore.js"></script>
 	<script src="http://d3js.org/queue.v1.min.js"></script>
