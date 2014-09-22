@@ -261,7 +261,6 @@ window.onload = function() {
             }
           })
         })
-      console.log(Object.keys(related_links).length)
       }
 
       function gotCommunities(error, data) {
@@ -378,8 +377,7 @@ window.onload = function() {
             })
           }
         }
-        console.log(communities)
-
+    
         updateColorScales(data);
         updateSizeScales(data);
         updateMaxArea(areaRatio);
@@ -677,6 +675,8 @@ window.onload = function() {
         node.select('circle').attr('r', function(d){
           //console.log(d.center_radius, xScale(d.center_radius)); return 10;
           return comCircleScale(d.center_radius)
+        }).on("click",function(d){
+          community_plot(d)
         })
 
         return node
@@ -737,7 +737,6 @@ window.onload = function() {
       }
 
       function showVehicles(veh) { 
-        console.log(communities[step].values)
         showCommunities(communities[step].values)
 
         if (filter && filter!="") {
@@ -917,52 +916,7 @@ window.onload = function() {
             monsterTable.redraw(); 
           });
           updateMonsterCommunity();  
-      //   if (vehicles && vehicles[step] && vehicles[step].length > 0) {
-      //     var cf = crossfilter(vehicles[step])
-      //     var communitiesDimension = cf.dimension(function(d) { return d.com_id });
-      //     var groupCommunities = communitiesDimension.group().reduce(
-      //       function(p,v) { // add
-      //         ++p.count;
-      //         if (v.num_stops > 1) { ++p.stops_count }
-      //         p.speed_sum += v.speed
-      //         p.speed_avg = p.speed_sum / p.count;
-      //         p.id = v.com_id;
-      //         return p;
-      //       },
-      //       function(p,v) { // remove
-      //         --p.count;
-      //         if (v[metric] > 0) { --p.stops_count }
-      //         p.speed_sum -= v.speed_sum;
-      //         p.speed_avg = p.speed_sum / p.count;
-      //         return p;
-      //       },
-      //       function() { // init
-      //         return { id: 0, count: 0, speed_sum: 0, speed_avg: 0, stops_count: 0 };
-      //       }
-      //     );
-      //     function orderValue(p) {
-      //       return p.count;
-      //     }
-      //     communities = groupCommunities.order(orderValue).top(3);
-      //     var monsterTable = dc.dataTable("#dc-monster-graph");
-      //     monsterTable.width(800).height(800)
-      //       .dimension(groupCommunities)
-      //       .group(function(d) { return ""})
-      //       .size(10)
-      //       .columns([
-      //       function(d) { return d.value.id },
-      //       function(d) { return d.value.count },
-      //       function(d) { return parseFloat(d.value.speed_avg).toFixed(2) },
-      //       function(d) { return parseFloat(d.value.speed_avg).toFixed(2) },
-      //       function(d) { return d.value.stops_count },
-      //       function(d) { return '<svg><g class="node" transform="translate(10,10)" style="fill:'+colorScales["com_id"](d.value.id)+'"><circle r="5"></circle>/g></svg>' }
-      //       ])
-      //       .sortBy(orderValue)
-      //       .order(d3.ascending);
-      //     // dc.renderAll();
-      //     monsterTable.render();
-      //     updateMonsterCommunity()  
-      //   }
+
         }
       }
       function updateMonsterCommunity() {
@@ -1355,4 +1309,161 @@ window.onload = function() {
           timer = 0
         }
       }
+
+      window.community_plot = function() {
+        var figure_interfase
+
+        var margin = {top: 20, right: 80, bottom: 30, left: 50},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        var x = d3.scale.linear()
+            .range([0, width]);
+
+        var y = d3.scale.linear()
+            .range([height, 0]);
+
+        var color = d3.scale.category10();
+
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+        var line = d3.svg.line()
+            .interpolate("basis")
+            .x(function(d) { return x(d.step); })
+            .y(function(d) { return y(d.indexHomoCongestion); });
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // x.domain(d3.extent(communities, function(d) { return +d.key; }));
+        x.domain([10,1300]);
+        y.domain([0,1]);
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Index of Homogeneous Congestion");
+
+        figure_interfase = function(community){
+          var com_id = community.com_id;
+
+          var data = communities.map(function(d){
+            var event = d.values.filter(function(community){
+              return community.com_id == com_id
+            })
+
+            if (event.length == 1) {
+              return event[0]
+            }
+
+            return 
+          }).filter(function(d){return d != undefined})
+
+          
+          
+          // x.domain(d3.extent(communities, function(d) { return +d.key; }));
+          // y.domain([0,1]);
+
+
+          // svg.append("g")
+          //     .attr("class", "x axis")
+          //     .attr("transform", "translate(0," + height + ")")
+          //     .call(xAxis);
+
+          // svg.append("g")
+          //     .attr("class", "y axis")
+          //     .call(yAxis)
+          //   .append("text")
+          //     .attr("transform", "rotate(-90)")
+          //     .attr("y", 6)
+          //     .attr("dy", ".71em")
+          //     .style("text-anchor", "end")
+          //     .text("index");
+
+          svg.selectAll(".data-path").remove()
+
+          svg.append("g").attr("class","data-path")
+            .append("path")
+              .datum(data)
+              .attr("class", "line")
+              .attr("d", function(d) { return line(d); })
+              .style("stroke", "steelblue")
+              .style("fill","none");
+        }
+        // d3.tsv("data.tsv", function(error, data) {
+        //   color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+
+        //   data.forEach(function(d) {
+        //     d.date = parseDate(d.date);
+        //   });
+
+        //   var cities = color.domain().map(function(name) {
+        //     return {
+        //       name: name,
+        //       values: data.map(function(d) {
+        //         return {date: d.date, temperature: +d[name]};
+        //       })
+        //     };
+        //   });
+
+        //   x.domain(d3.extent(data, function(d) { return d.date; }));
+
+        //   y.domain([
+        //     d3.min(cities, function(c) { return d3.min(c.values, function(v) { return v.temperature; }); }),
+        //     d3.max(cities, function(c) { return d3.max(c.values, function(v) { return v.temperature; }); })
+        //   ]);
+
+        //   svg.append("g")
+        //       .attr("class", "x axis")
+        //       .attr("transform", "translate(0," + height + ")")
+        //       .call(xAxis);
+
+        //   svg.append("g")
+        //       .attr("class", "y axis")
+        //       .call(yAxis)
+        //     .append("text")
+        //       .attr("transform", "rotate(-90)")
+        //       .attr("y", 6)
+        //       .attr("dy", ".71em")
+        //       .style("text-anchor", "end")
+        //       .text("Temperature (ºF)");
+
+        //   var city = svg.selectAll(".city")
+        //       .data(cities)
+        //     .enter().append("g")
+        //       .attr("class", "city");
+
+        //   city.append("path")
+        //       .attr("class", "line")
+        //       .attr("d", function(d) { return line(d.values); })
+        //       .style("stroke", function(d) { return color(d.name); });
+
+        //   city.append("text")
+        //       .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
+        //       .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.temperature) + ")"; })
+        //       .attr("x", 3)
+        //       .attr("dy", ".35em")
+        //       .text(function(d) { return d.name; });
+        // });
+        return figure_interfase
+      }();
     }
